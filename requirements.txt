@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+SQLAlchemy
+mysqlclient
+aiomysql
+PyMySQL
+aiokafka
+motor
+pydantic-settings
+cryptography
