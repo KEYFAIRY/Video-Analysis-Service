@@ -1,0 +1,43 @@
+services:
+  video-analysis-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: video-analysis-service
+    ports:
+      - "${VIDEO_ANALYSIS_SERVICE_PORT:-8100}:8100"
+    environment:
+      ENVIRONMENT: ${APP_ENV:-development}
+
+      # Kafka
+      KAFKA_BROKER: ${KAFKA_BROKER}
+      KAFKA_INPUT_TOPIC: ${KAFKA_INPUT_TOPIC}
+      KAFKA_OUTPUT_TOPIC: ${KAFKA_OUTPUT_TOPIC}
+      KAFKA_GROUP_ID: ${KAFKA_GROUP_ID}
+      KAFKA_AUTO_OFFSET_RESET: ${KAFKA_AUTO_OFFSET_RESET}
+
+      # MySQL
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DB: ${MYSQL_DB}
+
+      # MongoDB
+      MONGO_HOST: ${MONGO_HOST}
+      MONGO_PORT: ${MONGO_PORT}
+      MONGO_USER: ${MONGO_USER}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_DB: ${MONGO_DB}
+
+      # Storage
+      STORAGE_PATH: ${CONTAINER_VIDEO_PATH}
+    volumes:
+      - ${HOST_VIDEO_PATH}:${CONTAINER_VIDEO_PATH}
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    external: true
