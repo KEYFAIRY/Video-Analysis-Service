@@ -10,7 +10,7 @@ from app.core.exceptions import DatabaseConnectionException
 
 logger = logging.getLogger(__name__)
 
-class MySQLMusicalErrorRepository(IMySQLRepo):
+class MySQLPosturalErrorRepository(IMySQLRepo):
     """Concrete implementation of IMySQLRepo using MySQL."""
 
     async def list_by_practice_id(self, id_practice: int) -> List[PosturalError]:

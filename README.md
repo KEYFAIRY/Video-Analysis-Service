@@ -39,8 +39,8 @@ Video analysis service for detecting non ergonomic hand postures
 │   │
 │   ├── 📁 presentation/               # Presentation layer (API and external interfaces)
 │   │   ├── 📁 api/                    # REST API endpoints
-│   │   │   ├── 📁 v1/                 # API v1 endpoints
-│   │   │   └── dependencies.py        # Shared dependencies (DI)
+│   │   │   └── 📁 v1/                 # API v1 endpoints
+│   │   │       └── dependencies.py    # Shared dependencies (DI)
 │   │   ├── 📁 schemas/                # Pydantic schemas ()
 │   │   └── 📁 middleware/             # Custom middleware (CORS, logging, error handling)
 │   │

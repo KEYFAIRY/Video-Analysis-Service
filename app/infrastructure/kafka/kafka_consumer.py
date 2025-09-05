@@ -8,7 +8,6 @@ from app.application.use_cases.process_and_store_error import ProcessAndStoreErr
 from app.domain.services.mongo_practice_service import MongoPracticeService
 from app.domain.services.postural_error_service import PosturalErrorService
 from app.infrastructure.kafka.kafka_message import KafkaMessage
-from app.infrastructure.repositories.mysql_repo import MySQLMusicalErrorRepository
 from app.infrastructure.repositories.mongo_repo import MongoRepo
 from app.application.dto.practice_data_dto import PracticeDataDTO
 
@@ -17,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 async def start_kafka_consumer():
     # Inicializar dependencias
-    mysql_repo = MySQLMusicalErrorRepository()
+    mysql_repo = MySQLPosturalErrorRepository()
     mongo_repo = MongoRepo()
 
     postural_service = PosturalErrorService(mysql_repo)
