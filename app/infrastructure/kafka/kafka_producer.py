@@ -27,7 +27,7 @@ class KafkaProducer:
         Publica un KafkaMessage en un topic
         """
         try:
-            payload = message.__dict__  # convertir dataclass → dict
+            payload = message.__dict__  # conversion dataclass → dict
             await self._producer.send_and_wait(topic, payload)
             logger.info("Message published to %s: %s", topic, payload)
         except Exception:

@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 async def start_kafka_consumer(kafka_producer: KafkaProducer):
-    # Inicializar dependencias
+    # Initialize dependencies
     mysql_repo = MySQLPosturalErrorRepository()
     mongo_repo = MongoRepo()
 
@@ -58,7 +58,7 @@ async def start_kafka_consumer(kafka_producer: KafkaProducer):
                     reps=kafka_msg.reps,
                 )
 
-                # Ejecutar caso de uso
+                # Execute use case
                 errors = await use_case.execute(dto)
                 logger.info(f"Processed KafkaMessage with {len(errors)} errors")
 
