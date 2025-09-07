@@ -22,7 +22,7 @@ class DatabaseConnection:
         self.async_engine = None
         self.async_session_factory: async_sessionmaker[AsyncSession] | None = None
 
-    def create_async_engine(self):
+    def init_engine(self):
         """Initializes the async database engine and session factory if not already done."""
         if not self.async_engine:
             try:
@@ -45,7 +45,7 @@ class DatabaseConnection:
     def get_async_session(self) -> AsyncSession:
         """Gets a new async session."""
         if not self.async_session_factory:
-            self.create_async_engine()
+            self.init_engine()
         return self.async_session_factory()
 
     async def close_connections(self):
