@@ -15,7 +15,7 @@ class MongoConnection:
         mongo_port = os.getenv("MONGO_PORT", "27017")
         mongo_db = os.getenv("MONGO_DB", "keyfairy")
 
-        # Construir la URI con usuario y contraseña
+        # Build the MongoDB URI
         self.mongo_uri = f"mongodb://{mongo_user}:{mongo_password}@{mongo_host}:{mongo_port}/{mongo_db}"
         self.mongo_db_name = mongo_db
         self.client: AsyncIOMotorClient | None = None

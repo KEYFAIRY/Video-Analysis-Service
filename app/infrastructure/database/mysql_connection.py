@@ -56,4 +56,4 @@ class DatabaseConnection:
 
 
 # Global instance
-db_connection = DatabaseConnection()
+mysql_connection = DatabaseConnection()
