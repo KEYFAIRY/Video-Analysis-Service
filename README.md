@@ -28,7 +28,6 @@ Video analysis service for detecting non ergonomic hand postures
 │   ├── 📁 application/                 # Application layer (use case orchestration)
 │   │   ├── 📁 use_cases/               # Use cases ()
 │   │   ├── 📁 dto/                     # Data Transfer Objects
-│   │   └── 📁 interfaces/              # Application-level interfaces
 │   │
 │   ├── 📁 infrastructure/              # Technical implementations
 │   │   ├── 📁 kafka/                   # Kafka consumer and producer
