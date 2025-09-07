@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     APP_ENV: str = Field(default="development")
     DEBUG: bool = False
 
-    # Servidor FastAPI
+    # FastAPI
     HOST: str = "0.0.0.0"
     RELOAD: bool = False
     VIDEO_ANALYSIS_SERVICE_PORT: int
@@ -68,11 +68,8 @@ class Settings(BaseSettings):
     LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
     # CORS
-    CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ]
-
+    CORS_ORIGINS: list[str] = ["*"]
+    
     class Config:
         case_sensitive = True
         env_file = ".env"
