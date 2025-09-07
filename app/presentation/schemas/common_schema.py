@@ -4,14 +4,13 @@ from typing import Optional, TypeVar, Generic
 
 from app.shared.enums import ResponseCode
 
-# Definimos un tipo genérico T
 T = TypeVar("T")
 
 class StandardResponse(GenericModel, Generic[T]):
     """Standard schema for all API responses"""
     code: str
     message: str
-    data: Optional[T] = None  # ahora data puede ser de cualquier tipo
+    data: Optional[T] = None
 
     @classmethod
     def success(cls, data: T = None, message: str = "Success", code: str = ResponseCode.SUCCESS):
