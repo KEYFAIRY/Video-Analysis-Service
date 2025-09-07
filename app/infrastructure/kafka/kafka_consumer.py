@@ -35,7 +35,7 @@ async def start_kafka_consumer(kafka_producer: KafkaProducer):
         bootstrap_servers=settings.KAFKA_BROKER,
         enable_auto_commit=True,
         auto_offset_reset=settings.KAFKA_AUTO_OFFSET_RESET,
-        group_id=None,
+        group_id=settings.KAFKA_GROUP_ID,
     )
 
     await consumer.start()
