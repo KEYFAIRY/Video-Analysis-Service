@@ -64,7 +64,7 @@ class PosturalErrorService:
             # 3. analizar el video y extraer errores
             # 4. guardar cada uno de los errores en la base de datos
             # Ejemplo de guardado:
-            # error = PosturalError(min_sec="00:30", explication="Hombros encogidos", id_practice=practice_id)
+            # error = PosturalError(min_sec="00:30", frame=300, explication="Hombros encogidos", id_practice=practice_id)
             # await self.posture_repo.create(error) 
 
             # stored_errors solamente se usó para colocar algo en los logs
