@@ -7,7 +7,7 @@ services:
     ports:
       - "${VIDEO_ANALYSIS_SERVICE_PORT:-8100}:8100"
     environment:
-      ENVIRONMENT: ${APP_ENV:-development}
+      APP_ENV: ${APP_ENV:-development}
 
       # Kafka
       KAFKA_BROKER: ${KAFKA_BROKER}
@@ -31,7 +31,7 @@ services:
       MONGO_DB: ${MONGO_DB}
 
       # Storage
-      STORAGE_PATH: ${CONTAINER_VIDEO_PATH}
+      CONTAINER_VIDEO_PATH: ${CONTAINER_VIDEO_PATH}
     volumes:
       - ${HOST_VIDEO_PATH}:${CONTAINER_VIDEO_PATH}
     restart: unless-stopped

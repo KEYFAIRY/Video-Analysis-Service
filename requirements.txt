@@ -9,3 +9,5 @@ aiokafka
 motor
 pydantic-settings
 cryptography
+aiofiles
+python_version == "3.11"
