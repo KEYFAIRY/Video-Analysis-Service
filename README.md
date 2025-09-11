@@ -10,7 +10,7 @@ Video analysis service for detecting non ergonomic hand postures
 ##  Project structure 📁
 
 ```bash
-📁 VIDEO-ANALYSIS-SERVICE/              # Root directory of the worker service
+📁 VIDEO-ANALYSIS-SERVICE/              # Root directory of the service
 │
 ├── 📁 app/                             # Main application code
 │   ├── main.py                         # Entry point: starts Kafka consumer + FastAPI app
@@ -33,7 +33,6 @@ Video analysis service for detecting non ergonomic hand postures
 │   │   ├── 📁 kafka/                   # Kafka consumer and producer
 │   │   ├── 📁 database/                # Database adapters
 │   │   │   └── 📁 models/              # Database models
-│   │   ├── 📁 storage/                 # Local file system access (read videos)
 │   │   └── 📁 repositories/            # Concrete repository implementations
 │   │
 │   ├── 📁 presentation/               # Presentation layer (API and external interfaces)

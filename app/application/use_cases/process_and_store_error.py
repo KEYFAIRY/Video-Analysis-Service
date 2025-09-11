@@ -1,6 +1,7 @@
 from typing import List
 from app.application.dto.postural_error_dto import PosturalErrorDTO
 from app.application.dto.practice_data_dto import PracticeDataDTO
+from app.domain.entities.practice_data import PracticeData
 from app.domain.services.mongo_practice_service import MongoPracticeService
 from app.domain.services.postural_error_service import PosturalErrorService
 from app.infrastructure.kafka.kafka_message import KafkaMessage
@@ -34,7 +35,14 @@ class ProcessAndStoreErrorUseCase:
         
         try:
             # 1️ Procesar y almacenar errores en MySQL
-            errors = await self.postural_service.process_and_store_error(data)
+            practice_data = PracticeData(
+                uid=data.uid,
+                practice_id=data.practice_id,
+                video_route=data.video_route,
+                scale=data.scale,
+                reps=data.reps
+            )
+            errors = await self.postural_service.process_and_store_error(practice_data)
             logger.info("Stored %d errors for practice_id=%s", len(errors), data.practice_id)
 
             # 2️ Actualizar Mongo usando el servicio
@@ -59,6 +67,7 @@ class ProcessAndStoreErrorUseCase:
             return [
                 PosturalErrorDTO(
                     min_sec=e.min_sec,
+                    frame=e.frame,
                     explication=e.explication
                 ) for e in errors
             ]

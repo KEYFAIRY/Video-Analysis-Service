@@ -29,6 +29,7 @@ class ListErrorsByPracticeUseCase:
             return [
                 PosturalErrorDTO(
                     min_sec=e.min_sec,
+                    frame=e.frame,
                     explication=e.explication
                 )
                 for e in errors

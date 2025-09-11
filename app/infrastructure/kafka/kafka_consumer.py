@@ -9,6 +9,7 @@ from app.domain.services.mongo_practice_service import MongoPracticeService
 from app.domain.services.postural_error_service import PosturalErrorService
 from app.infrastructure.kafka.kafka_message import KafkaMessage
 from app.infrastructure.kafka.kafka_producer import KafkaProducer
+from app.infrastructure.repositories.local_video_repo import LocalVideoRepository
 from app.infrastructure.repositories.mongo_repo import MongoRepo
 from app.application.dto.practice_data_dto import PracticeDataDTO
 from app.infrastructure.repositories.mysql_repo import MySQLPosturalErrorRepository
@@ -20,8 +21,9 @@ async def start_kafka_consumer(kafka_producer: KafkaProducer):
     # Initialize dependencies
     mysql_repo = MySQLPosturalErrorRepository()
     mongo_repo = MongoRepo()
+    video_repo = LocalVideoRepository()
 
-    postural_service = PosturalErrorService(mysql_repo)
+    postural_service = PosturalErrorService(mysql_repo, video_repo)
     mongo_service = MongoPracticeService(mongo_repo)
 
     use_case = ProcessAndStoreErrorUseCase(

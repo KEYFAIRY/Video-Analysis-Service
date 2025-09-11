@@ -3,6 +3,7 @@ import logging
 from app.domain.entities.postural_error import PosturalError
 from app.domain.entities.practice_data import PracticeData
 from app.domain.repositories.i_mysql_repo import IMySQLRepo
+from app.domain.repositories.i_videos_repo import IVideoRepo
 
 logger = logging.getLogger(__name__)
 
@@ -10,8 +11,9 @@ logger = logging.getLogger(__name__)
 class PosturalErrorService:
     """Domain service for management of postural errors"""
 
-    def __init__(self, posture_repo: IMySQLRepo):
+    def __init__(self, posture_repo: IMySQLRepo, video_repo: IVideoRepo):
         self.posture_repo = posture_repo
+        self.video_repo = video_repo
 
     async def list_errors_by_practice(self, id_practice: int) -> List[PosturalError]:
         try:
@@ -56,12 +58,13 @@ class PosturalErrorService:
                 },
             )
 
-            # TODO: Implementar análisis de video y extracción de errores
             # 1. obtener el video en video_route
+            video = await self.video_repo.read(video_route)
+            
             # 3. analizar el video y extraer errores
             # 4. guardar cada uno de los errores en la base de datos
             # Ejemplo de guardado:
-            # error = PosturalError(min_sec="00:30", explication="Hombros encogidos", id_practice=practice_id)
+            # error = PosturalError(min_sec="00:30", frame=300, explication="Hombros encogidos", id_practice=practice_id)
             # await self.posture_repo.create(error) 
 
             # stored_errors solamente se usó para colocar algo en los logs

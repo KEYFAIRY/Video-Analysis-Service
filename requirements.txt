@@ -9,3 +9,4 @@ aiokafka
 motor
 pydantic-settings
 cryptography
+aiofiles

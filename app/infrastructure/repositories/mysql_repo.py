@@ -34,6 +34,7 @@ class MySQLPosturalErrorRepository(IMySQLRepo):
             try:
                 model = PosturalErrorModel(
                     min_sec=postural_error.min_sec,
+                    frame=postural_error.frame,
                     explication=postural_error.explication,
                     id_practice=postural_error.id_practice
                 )
@@ -64,6 +65,7 @@ class MySQLPosturalErrorRepository(IMySQLRepo):
         return PosturalError(
             id=model.id,
             min_sec=model.min_sec,
+            frame=model.frame,
             explication=model.explication,
             id_practice=model.id_practice
         )
