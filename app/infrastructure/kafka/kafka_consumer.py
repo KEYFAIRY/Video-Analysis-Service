@@ -16,7 +16,7 @@ from app.infrastructure.repositories.mysql_repo import MySQLPosturalErrorReposit
 
 logger = logging.getLogger(__name__)
 
-MAX_CONCURRENT_VIDEOS = 2
+MAX_CONCURRENT_VIDEOS = 3
 semaphore = asyncio.Semaphore(MAX_CONCURRENT_VIDEOS)
 
 async def start_kafka_consumer(kafka_producer: KafkaProducer):
