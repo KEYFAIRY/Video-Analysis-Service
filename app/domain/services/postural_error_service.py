@@ -4,6 +4,7 @@ from app.domain.entities.postural_error import PosturalError
 from app.domain.entities.practice_data import PracticeData
 from app.domain.repositories.i_mysql_repo import IMySQLRepo
 from app.domain.repositories.i_videos_repo import IVideoRepo
+from app.infrastructure.video.analyzer import process_video
 
 logger = logging.getLogger(__name__)
 
@@ -57,28 +58,22 @@ class PosturalErrorService:
                     "reps": reps,
                 },
             )
-
-            # 1. obtener el video en video_route
-            video = await self.video_repo.read(video_route)
             
-            # 3. analizar el video y extraer errores
-            # 4. guardar cada uno de los errores en la base de datos
-            # Ejemplo de guardado:
-            # error = PosturalError(min_sec="00:30", frame=300, explication="Hombros encogidos", id_practice=practice_id)
-            # await self.posture_repo.create(error) 
-
-            # stored_errors solamente se usó para colocar algo en los logs
-            stored_errors: List[PosturalError] = []
+            # Analizar el video y extraer errores
+            errors = process_video(video_route, practice_id)
+            
+            for error in errors:
+                await self.posture_repo.create(error)
 
             logger.info(
                 "Finished processing errors for uid=%s, practice_id=%s. Stored=%d",
                 uid,
                 practice_id,
-                len(stored_errors),
-                extra={"uid": uid, "practice_id": practice_id, "stored": len(stored_errors)},
+                len(errors),
+                extra={"uid": uid, "practice_id": practice_id, "stored": len(errors)},
             )
 
-            return stored_errors
+            return errors
 
         except Exception as e:
             logger.error(

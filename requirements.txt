@@ -10,3 +10,7 @@ motor
 pydantic-settings
 cryptography
 aiofiles
+ultralytics
+opencv-python-headless
+mediapipe
+numpy

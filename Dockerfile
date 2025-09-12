@@ -4,23 +4,31 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Instalar dependencias del sistema para compilar mysqlclient
+# Instalar dependencias del sistema necesarias
 RUN apt-get update && apt-get install -y \
     build-essential \
     default-libmysqlclient-dev \
     pkg-config \
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    git \
+    wget \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar requirements
 COPY requirements.txt .
 
 # Instalar dependencias de Python
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copiar todo el código fuente
 COPY . .
 
-# Exponer el puerto interno
+# Exponer el puerto del servicio
 EXPOSE 8100
 
 # Comando por defecto al iniciar el contenedor

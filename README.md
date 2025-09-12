@@ -33,15 +33,8 @@ Video analysis service for detecting non ergonomic hand postures
 │   │   ├── 📁 kafka/                   # Kafka consumer and producer
 │   │   ├── 📁 database/                # Database adapters
 │   │   │   └── 📁 models/              # Database models
+│   │   ├── 📁 video/                   # Video analysis related
 │   │   └── 📁 repositories/            # Concrete repository implementations
-│   │
-│   ├── 📁 presentation/               # Presentation layer (API and external interfaces)
-│   │   ├── 📁 api/                    # REST API endpoints
-│   │   │   └── 📁 v1/                 # API v1 endpoints
-│   │   │       └── dependencies.py    # Shared dependencies (DI)
-│   │   ├── 📁 schemas/                # Pydantic schemas ()
-│   │   └── 📁 middleware/             # Custom middleware (CORS, logging, error handling)
-│   │
 │   └── 📁 shared/                      # Shared utilities
 │       ├── constants.py                # Global constants
 │       ├── enums.py                    # Enumerations
@@ -60,7 +53,6 @@ Video analysis service for detecting non ergonomic hand postures
 ├── docker-compose.yml                  # Runs only this service container
 ├── requirements.txt                    # Python dependencies
 └── README.md                           # Project documentation
-
 ```
 
 
