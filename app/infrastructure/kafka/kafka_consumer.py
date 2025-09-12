@@ -16,9 +16,10 @@ from app.infrastructure.repositories.mysql_repo import MySQLPosturalErrorReposit
 
 logger = logging.getLogger(__name__)
 
+MAX_CONCURRENT_VIDEOS = 2
+semaphore = asyncio.Semaphore(MAX_CONCURRENT_VIDEOS)
 
 async def start_kafka_consumer(kafka_producer: KafkaProducer):
-    # Initialize dependencies
     mysql_repo = MySQLPosturalErrorRepository()
     mongo_repo = MongoRepo()
     video_repo = LocalVideoRepository()
@@ -41,17 +42,26 @@ async def start_kafka_consumer(kafka_producer: KafkaProducer):
     )
 
     await consumer.start()
+    tasks = []
     try:
         logger.info("Kafka consumer started")
+
+        async def process_message(dto: PracticeDataDTO):
+            async with semaphore:
+                try:
+                    errors = await use_case.execute(dto)
+                    logger.info(f"Processed KafkaMessage with {len(errors)} errors")
+                except Exception as e:
+                    logger.error(f"Error processing message in background: {e}", exc_info=True)
+
         async for msg in consumer:
             try:
                 decoded = msg.value.decode()
                 logger.info(f"Received raw message: {decoded}")
 
-                # JSON → KafkaMessage
                 data = json.loads(decoded)
-                kafka_msg = KafkaMessage(**data) 
-                
+                kafka_msg = KafkaMessage(**data)
+
                 dto = PracticeDataDTO(
                     uid=kafka_msg.uid,
                     practice_id=kafka_msg.practice_id,
@@ -60,12 +70,18 @@ async def start_kafka_consumer(kafka_producer: KafkaProducer):
                     reps=kafka_msg.reps,
                 )
 
-                # Execute use case
-                errors = await use_case.execute(dto)
-                logger.info(f"Processed KafkaMessage with {len(errors)} errors")
+                # Crear la tarea y guardarla en la lista
+                task = asyncio.create_task(process_message(dto))
+                tasks.append(task)
 
             except Exception as e:
                 logger.error(f"Error processing message: {e}", exc_info=True)
+
     finally:
         await consumer.stop()
         logger.info("Kafka consumer stopped")
+
+        if tasks:
+            logger.info("Waiting for all background tasks to finish...")
+            await asyncio.gather(*tasks)  # Espera que todas las tareas terminen
+            logger.info("All background tasks finished.")
