@@ -14,52 +14,73 @@ class MySQLPosturalErrorRepository(IMySQLRepo):
     """Concrete implementation of IMySQLRepo using MySQL."""
 
     async def list_by_practice_id(self, id_practice: int) -> List[PosturalError]:
-        async with mysql_connection.get_async_session() as session:
-            try:
-                result = await session.execute(
-                    select(PosturalErrorModel).where(PosturalErrorModel.id_practice == id_practice)
-                )
-                rows = result.scalars().all()
-                logger.debug(f"Fetched {len(rows)} postural errors for practice_id={id_practice}")
-                return [self._model_to_entity(row) for row in rows]
-            except SQLAlchemyError as e:
-                logger.error(
-                    f"MySQL error listing postural errors for practice_id={id_practice}: {e}",
-                    exc_info=True
-                )
-                raise DatabaseConnectionException(f"Error fetching postural errors: {str(e)}")
+        session = None
+        try:
+            session = mysql_connection.get_async_session()
+            result = await session.execute(
+                select(PosturalErrorModel).where(PosturalErrorModel.id_practice == id_practice)
+            )
+            rows = result.scalars().all()
+            logger.debug(f"Fetched {len(rows)} postural errors for practice_id={id_practice}")
+            return [self._model_to_entity(row) for row in rows]
+        except SQLAlchemyError as e:
+            logger.error(
+                f"MySQL error listing postural errors for practice_id={id_practice}: {e}",
+                exc_info=True
+            )
+            raise DatabaseConnectionException(f"Error fetching postural errors: {str(e)}")
+        finally:
+            if session:
+                await session.close()
+            
 
     async def create(self, postural_error: PosturalError) -> PosturalError:
-        async with mysql_connection.get_async_session() as session:
-            try:
-                model = PosturalErrorModel(
-                    min_sec=postural_error.min_sec,
-                    frame=postural_error.frame,
-                    explication=postural_error.explication,
-                    id_practice=postural_error.id_practice
-                )
-                session.add(model)
-                await session.commit()
-                await session.refresh(model)
+        session = None
+        try:
+            session = mysql_connection.get_async_session()
+            model = PosturalErrorModel(
+                min_sec=postural_error.min_sec,
+                frame=postural_error.frame,
+                explication=postural_error.explication,
+                id_practice=postural_error.id_practice
+            )
+            session.add(model)
+            await session.commit()
+            await session.refresh(model)
 
-                logger.info(f"Postural error created with id={model.id} for practice_id={postural_error.id_practice}")
-                return self._model_to_entity(model)
+            logger.info(f"Postural error created with id={model.id} for practice_id={postural_error.id_practice}")
+            return self._model_to_entity(model)
 
-            except IntegrityError as e:
+        except IntegrityError as e:
+            if session:
                 await session.rollback()
-                logger.error(
-                    f"Integrity error creating postural error for practice_id={postural_error.id_practice}: {e}",
-                    exc_info=True
-                )
-                raise DatabaseConnectionException(f"Integrity error: {str(e)}")
+            logger.error(
+                f"Integrity error creating postural error for practice_id={postural_error.id_practice}: {e}",
+                exc_info=True
+            )
+            raise DatabaseConnectionException(f"Integrity error: {str(e)}")
 
-            except SQLAlchemyError as e:
+        except SQLAlchemyError as e:
+            if session:
                 await session.rollback()
-                logger.error(
-                    f"MySQL error creating postural error for practice_id={postural_error.id_practice}: {e}",
-                    exc_info=True
-                )
-                raise DatabaseConnectionException(f"Error creating postural error: {str(e)}")
+            logger.error(
+                f"MySQL error creating postural error for practice_id={postural_error.id_practice}: {e}",
+                exc_info=True
+            )
+            raise DatabaseConnectionException(f"Error creating postural error: {str(e)}")
+        
+        except Exception as e:
+            if session:
+                await session.rollback()
+            logger.error(
+                f"Unexpected error creating postural error for practice_id={postural_error.id_practice}: {e}",
+                exc_info=True
+            )
+            raise DatabaseConnectionException(f"Unexpected error: {str(e)}")
+        
+        finally:
+            if session:
+                await session.close()
 
     def _model_to_entity(self, model: PosturalErrorModel) -> PosturalError:
         return PosturalError(
