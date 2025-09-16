@@ -49,12 +49,13 @@ class ProcessAndStoreErrorUseCase:
             await self.mongo_service.mark_video_done(uid=str(data.uid), id_practice=data.practice_id)
             logger.info("Marked video as done in Mongo for uid=%s, practice_id=%s", data.uid, data.practice_id)
 
-            # 3️ Publicar mensaje en Kafka (si el producer está habilitado)
+            # 3️ Publicar mensaje en Kafka
             kafka_message = KafkaMessage(
                 uid=data.uid,
                 practice_id=data.practice_id,
-                message="audio_done",
+                message="video_done",
                 scale=data.scale,
+                scale_type=data.scale_type, 
                 video_route=data.video_route,
                 reps=data.reps,
             )

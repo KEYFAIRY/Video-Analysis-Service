@@ -6,4 +6,5 @@ class PracticeDataDTO:
     practice_id: int
     video_route: str
     scale: str
+    scale_type: str
     reps: str

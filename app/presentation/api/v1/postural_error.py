@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status
 from typing import List
 import logging
 
+
 from app.presentation.api.v1.dependencies import list_errors_by_practice_use_case_dependency
 from app.presentation.schemas.common_schema import StandardResponse
 from app.application.use_cases.list_errors_by_practice import ListErrorsByPracticeUseCase
@@ -9,7 +10,7 @@ from app.presentation.schemas.postural_error_schema import PosturalErrorResponse
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/errors", tags=["Postural Errors"])
+router = APIRouter(prefix="/postural-errors", tags=["Postural Errors"])
 
 
 @router.get(

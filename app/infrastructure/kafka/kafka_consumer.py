@@ -67,6 +67,7 @@ async def start_kafka_consumer(kafka_producer: KafkaProducer):
                     practice_id=kafka_msg.practice_id,
                     video_route=kafka_msg.video_route,
                     scale=kafka_msg.scale,
+                    scale_type=kafka_msg.scale_type,
                     reps=kafka_msg.reps,
                 )
 
