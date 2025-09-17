@@ -1,10 +1,18 @@
+# analyzer.py - Versión determinista enfocada en la aleatoriedad de modelos
+
 from app.domain.entities.postural_error import PosturalError
-from typing import Optional
 import cv2
-import mediapipe as mp
 import numpy as np
+import mediapipe as mp
 from ultralytics import YOLO
 from datetime import timedelta
+from typing import List
+import logging
+import os
+import random
+import torch
+
+logger = logging.getLogger(__name__)
 
 # -----------------------
 # Configuración
@@ -16,20 +24,54 @@ MIN_ELBOW_CONFIDENCE = 0.5
 MIN_HAND_LANDMARKS_VISIBLE = 18
 MIN_ERROR_DURATION = 1.0  # segundos
 
+# SEMILLA DETERMINÍSTICA
+RANDOM_SEED = 42
+
+def set_deterministic_environment():
+    """Configura entorno determinista para los modelos."""
+    # Python random
+    random.seed(RANDOM_SEED)
+    np.random.seed(RANDOM_SEED)
+    os.environ['PYTHONHASHSEED'] = str(RANDOM_SEED)
+    
+    # PyTorch (YOLO)
+    torch.manual_seed(RANDOM_SEED)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(RANDOM_SEED)
+        torch.cuda.manual_seed_all(RANDOM_SEED)
+        # CRÍTICO: Forzar comportamiento determinista
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+    
+    # Variables de entorno para TensorFlow (MediaPipe)
+    os.environ['TF_DETERMINISTIC_OPS'] = '1'
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
+
 # -----------------------
-# Helpers matemáticos
+# Helpers matemáticos (más robustos)
 # -----------------------
 def angle_between_points(a, b, c):
-    a, b, c = map(lambda p: np.array(p, dtype=np.float32), (a, b, c))
+    """Cálculo de ángulo más preciso y consistente."""
+    a, b, c = map(lambda p: np.array(p, dtype=np.float64), (a, b, c))
     ba, bc = a - b, c - b
-    if np.linalg.norm(ba) == 0 or np.linalg.norm(bc) == 0:
+    
+    norm_ba = np.linalg.norm(ba)
+    norm_bc = np.linalg.norm(bc)
+    
+    if norm_ba < 1e-10 or norm_bc < 1e-10:
         return 0.0
-    cos_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
+    
+    cos_angle = np.dot(ba, bc) / (norm_ba * norm_bc)
     cos_angle = np.clip(cos_angle, -1.0, 1.0)
-    return np.degrees(np.arccos(cos_angle))
+    
+    # Redondeo para consistencia numérica
+    angle = np.degrees(np.arccos(cos_angle))
+    return round(angle, 2)
 
 def distance_between_points(p1, p2):
-    return np.linalg.norm(np.array(p1) - np.array(p2))
+    """Distancia con precisión consistente."""
+    dist = np.linalg.norm(np.array(p1, dtype=np.float64) - np.array(p2, dtype=np.float64))
+    return round(dist, 2)
 
 def format_seconds_to_mmss(seconds):
     td = timedelta(seconds=int(seconds))
@@ -37,7 +79,7 @@ def format_seconds_to_mmss(seconds):
     return f"{mm:02}:{ss:02}"
 
 # -----------------------
-# Funciones de validación
+# Funciones de validación (idénticas al Código 1)
 # -----------------------
 def validate_hand_quality(hand_landmarks, w, h):
     visible_landmarks = 0
@@ -57,7 +99,7 @@ def validate_hand_quality(hand_landmarks, w, h):
     return is_valid, visible_landmarks, avg_confidence
 
 def detect_obstruction_in_regions(frame, elbows_detected, manos_detectadas):
-    """Detecta obstrucciones en regiones críticas"""
+    """Detecta obstrucciones en regiones críticas - IMPLEMENTACIÓN COMPLETA DEL CÓDIGO 1"""
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     regions_of_interest = []
 
@@ -94,7 +136,7 @@ def detect_obstruction_in_regions(frame, elbows_detected, manos_detectadas):
     return False
 
 def validate_hands_positioning(manos_detectadas):
-    """Validación completa de posicionamiento"""
+    """Validación completa de posicionamiento - DEL CÓDIGO 1"""
     if len(manos_detectadas) != 2:
         return False
 
@@ -112,7 +154,7 @@ def validate_hands_positioning(manos_detectadas):
     return True
 
 # -----------------------
-# Reglas de detección de errores
+# Reglas de detección de errores (del Código 1)
 # -----------------------
 def wrist_rules(wrist, mid_wrist, elbow, hand_side):
     if elbow is None:
@@ -132,39 +174,108 @@ def abduction_rules(wrist, fingers, hand_side):
     return errors
 
 def get_error_description(error_type: str) -> str:
-    """Descripción legible de errores"""
+    """Descripción legible de errores - MEJORADA"""
     if "wrist_rules" in error_type:
         hand = "izquierda" if "izquierda" in error_type else "derecha"
-        return f"Flexion radial/cubital en mano {hand}"
+        return f"Flexión radial/cubital en mano {hand}"
     elif "abduction_rules" in error_type:
         hand = "izquierda" if "izquierda" in error_type else "derecha"
         if "dedos_" in error_type:
             parts = error_type.split("_")
             if len(parts) >= 4:
                 finger1, finger2 = parts[-2], parts[-1]
-                return f"Angulo excesivo entre dedos {finger1}-{finger2} en mano {hand}"
+                return f"Ángulo excesivo entre dedos {finger1}-{finger2} en mano {hand}"
         return f"Error de abducción en mano {hand}"
     return error_type
 
 # -----------------------
-# Modelos
+# Inicialización determinística de modelos
 # -----------------------
-yolo_model = YOLO(YOLO_WEIGHTS)
-mp_hands = mp.solutions.hands
-hands_detector = mp_hands.Hands(
-    static_image_mode=False,
-    max_num_hands=2,
-    min_detection_confidence=MIN_HAND_CONFIDENCE,
-    min_tracking_confidence=MIN_HAND_CONFIDENCE,
-)
+def safe_load_yolo_model(weights_path: str, max_retries: int = 3):
+    """Carga segura del modelo YOLO con validación y reintentos."""
+    for attempt in range(max_retries):
+        try:
+            # Verificar si el archivo existe y es válido
+            if os.path.exists(weights_path):
+                file_size = os.path.getsize(weights_path)
+                # Verificar que el archivo no esté vacío o corrupto
+                if file_size < 1000000:  # Menos de 1MB indica archivo corrupto
+                    logger.warning(f"Model file {weights_path} appears corrupted (size: {file_size}). Removing...")
+                    os.remove(weights_path)
+            
+            # Intentar cargar el modelo
+            logger.info(f"Loading YOLO model from {weights_path} (attempt {attempt + 1}/{max_retries})")
+            yolo_model = YOLO(weights_path)
+            
+            # Forzar modo eval para deshabilitar dropout y comportamientos aleatorios
+            if hasattr(yolo_model.model, 'eval'):
+                yolo_model.model.eval()
+            
+            logger.info("YOLO model loaded successfully")
+            return yolo_model
+            
+        except Exception as e:
+            logger.error(f"Failed to load YOLO model (attempt {attempt + 1}/{max_retries}): {e}")
+            
+            # Si el archivo existe pero está corrupto, eliminarlo
+            if os.path.exists(weights_path):
+                try:
+                    os.remove(weights_path)
+                    logger.info(f"Removed corrupted model file: {weights_path}")
+                except Exception as rm_e:
+                    logger.error(f"Failed to remove corrupted file: {rm_e}")
+            
+            if attempt == max_retries - 1:
+                raise RuntimeError(f"Failed to load YOLO model after {max_retries} attempts: {e}")
+            
+            # Esperar antes del siguiente intento
+            import time
+            time.sleep(2 ** attempt)  # Backoff exponencial
+    
+    raise RuntimeError("Unable to load YOLO model")
+
+def initialize_models():
+    """Inicializa modelos con configuración determinista."""
+    set_deterministic_environment()
+    
+    # YOLO con carga segura y configuración determinista
+    yolo_model = safe_load_yolo_model(YOLO_WEIGHTS)
+    
+    # MediaPipe con configuración más estricta
+    mp_hands = mp.solutions.hands
+    hands_detector = mp_hands.Hands(
+        static_image_mode=False,
+        max_num_hands=2,
+        min_detection_confidence=MIN_HAND_CONFIDENCE,
+        min_tracking_confidence=MIN_HAND_CONFIDENCE,
+    )
+    
+    return yolo_model, hands_detector
+
+# Variables globales de modelos (inicializadas una sola vez)
+_yolo_model = None
+_hands_detector = None
+
+def get_models():
+    """Obtiene las instancias de los modelos (singleton pattern)."""
+    global _yolo_model, _hands_detector
+    if _yolo_model is None or _hands_detector is None:
+        _yolo_model, _hands_detector = initialize_models()
+    return _yolo_model, _hands_detector
 
 # -----------------------
-# Función principal de procesamiento
+# Función principal de procesamiento DETERMINÍSTICA
 # -----------------------
-def process_video(video_path: str, practice_id: int, bpm: int) -> list[PosturalError]:
+def process_video(video_path: str, practice_id: int, bpm: int) -> list['PosturalError']:
     """
-    Procesamiento completo de video
+    Procesamiento determinista de video - MISMA LÓGICA DEL CÓDIGO 1
     """
+    # CRÍTICO: Re-establecer semillas antes de cada procesamiento
+    set_deterministic_environment()
+    
+    # Obtener modelos inicializados
+    yolo_model, hands_detector = get_models()
+    
     # Calcular frames por segundo basado en BPM
     FRAMES_PER_SECOND_TO_PROCESS = max(1, int((bpm / 60) * 2))
     
@@ -176,9 +287,13 @@ def process_video(video_path: str, practice_id: int, bpm: int) -> list[PosturalE
     frame_idx = 0
     results = []
     
-    # Seguimiento de errores
+    # Sistema de seguimiento de errores (del Código 1)
     ongoing_errors = {}
     incidents = []
+    
+    # Estadísticas
+    total_processed = 0
+    discarded_frames = 0
 
     while True:
         ret, frame = cap.read()
@@ -187,18 +302,18 @@ def process_video(video_path: str, practice_id: int, bpm: int) -> list[PosturalE
             _finalize_all_ongoing_errors(ongoing_errors, incidents)
             break
 
-        # Procesar solo ciertos frames por segundo
+        # Procesar solo ciertos frames por segundo (del Código 1)
         frames_interval = max(1, int(fps / FRAMES_PER_SECOND_TO_PROCESS))
         if frame_idx % frames_interval != 0:
             frame_idx += 1
             continue
 
-        # PROCESAMIENTO COMPLETO DEL FRAME
+        # PROCESAMIENTO COMPLETO DEL FRAME (lógica del Código 1)
         h, w = frame.shape[:2]
         detected_errors = []
         elbows = {}
 
-        # ===== DETECCIÓN DE CODOS CON YOLO =====
+        # ===== DETECCIÓN DE CODOS CON YOLO (lógica completa) =====
         results_yolo = yolo_model.predict(frame, imgsz=640, conf=MIN_ELBOW_CONFIDENCE, verbose=False)
         elbows_detected = []
         yolo_valid = False
@@ -216,14 +331,14 @@ def process_video(video_path: str, practice_id: int, bpm: int) -> list[PosturalE
                 left_conf = confs[person_idx][7] if confs is not None else 1.0
                 right_conf = confs[person_idx][8] if confs is not None else 1.0
 
-                # VALIDACIÓN COMPLETA DE CONFIANZA
+                # VALIDACIÓN COMPLETA DE CONFIANZA (del Código 1)
                 if left_conf > MIN_ELBOW_CONFIDENCE and right_conf > MIN_ELBOW_CONFIDENCE:
                     elbows_detected.extend([left_elbow, right_elbow])
                     elbows["izquierda"] = left_elbow
                     elbows["derecha"] = right_elbow
                     yolo_valid = True
 
-        # ===== DETECCIÓN DE MANOS CON MEDIAPIPE =====
+        # ===== DETECCIÓN DE MANOS CON MEDIAPIPE (lógica completa) =====
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         res = hands_detector.process(rgb)
         manos_detectadas = []
@@ -243,7 +358,7 @@ def process_video(video_path: str, practice_id: int, bpm: int) -> list[PosturalE
 
         total_processed += 1
 
-        # ===== VALIDACIONES COMPLETAS =====
+        # ===== VALIDACIONES COMPLETAS (todas del Código 1) =====
         
         # 1. Validación básica de detecciones
         if len(manos_detectadas) != 2 or len(elbows_detected) != 2 or not yolo_valid or not hands_valid:
@@ -272,7 +387,7 @@ def process_video(video_path: str, practice_id: int, bpm: int) -> list[PosturalE
             frame_idx += 1
             continue
 
-        # ===== ANÁLISIS DE ERRORES =====
+        # ===== ANÁLISIS DE ERRORES (del Código 1) =====
         manos_detectadas.sort(key=lambda m: m[0])
 
         for i, (_, wrist, middle_mcp, hand_landmarks, lm) in enumerate(manos_detectadas):
@@ -289,7 +404,7 @@ def process_video(video_path: str, practice_id: int, bpm: int) -> list[PosturalE
             abduction_errors = abduction_rules(wrist, fingers, hand_side)
             detected_errors.extend(abduction_errors)
 
-        # ===== MANEJO DE INCIDENTES =====
+        # ===== MANEJO DE INCIDENTES (lógica completa del Código 1) =====
         current_time = frame_idx / fps if fps > 0 else 0
         current_error_set = set(detected_errors)
 
@@ -324,11 +439,11 @@ def process_video(video_path: str, practice_id: int, bpm: int) -> list[PosturalE
 
     cap.release()
 
-    # ===== CONVERSIÓN A PosturalError =====
+    # ===== CONVERSIÓN A PosturalError (solo errores válidos) =====
     for inc in incidents:
         if inc and inc['duration'] >= MIN_ERROR_DURATION:
             min_sec_init = format_seconds_to_mmss(inc['start_time'])
-            min_sec_end = format_seconds_to_mmss(inc['end_time'])  # También timestamp mm:ss
+            min_sec_end = format_seconds_to_mmss(inc['end_time'])
             
             results.append(
                 PosturalError(
@@ -339,10 +454,11 @@ def process_video(video_path: str, practice_id: int, bpm: int) -> list[PosturalE
                 )
             )
 
+    logger.info(f"Video {video_path}: processed {total_processed} frames, discarded {discarded_frames}, found {len(results)} errors")
     return results
 
 # -----------------------
-# Funciones auxiliares de finalización
+# Funciones auxiliares de finalización (del Código 1)
 # -----------------------
 def _finalize_error(error_type, ongoing_errors):
     """Finaliza un error específico - SOLO ANÁLISIS DE DATOS"""

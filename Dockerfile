@@ -25,6 +25,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# Pre-download YOLO model to avoid runtime download issues
+RUN python -c "from ultralytics import YOLO; YOLO('yolo11m-pose.pt')"
+
 # Copiar todo el código fuente
 COPY . .
 
