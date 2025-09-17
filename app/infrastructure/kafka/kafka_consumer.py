@@ -69,6 +69,7 @@ async def start_kafka_consumer(kafka_producer: KafkaProducer):
                     scale=kafka_msg.scale,
                     scale_type=kafka_msg.scale_type,
                     reps=kafka_msg.reps,
+                    bpm=kafka_msg.bpm,
                 )
 
                 # Crear la tarea y guardarla en la lista

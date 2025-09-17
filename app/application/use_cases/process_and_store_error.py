@@ -40,7 +40,8 @@ class ProcessAndStoreErrorUseCase:
                 practice_id=data.practice_id,
                 video_route=data.video_route,
                 scale=data.scale,
-                reps=data.reps
+                reps=data.reps,
+                bpm=data.bpm,
             )
             errors = await self.postural_service.process_and_store_error(practice_data)
             logger.info("Stored %d errors for practice_id=%s", len(errors), data.practice_id)
@@ -58,6 +59,7 @@ class ProcessAndStoreErrorUseCase:
                 scale_type=data.scale_type, 
                 video_route=data.video_route,
                 reps=data.reps,
+                bpm=data.bpm,
             )
             
             logger.debug("Prepared Kafka message: %s", kafka_message)
@@ -67,8 +69,8 @@ class ProcessAndStoreErrorUseCase:
             # 4️ Mapear a DTOs
             return [
                 PosturalErrorDTO(
-                    min_sec=e.min_sec,
-                    frame=e.frame,
+                    min_sec_init=e.min_sec_init,
+                    min_sec_end=e.min_sec_end,
                     explication=e.explication
                 ) for e in errors
             ]

@@ -8,3 +8,4 @@ class PracticeDataDTO:
     scale: str
     scale_type: str
     reps: str
+    bpm: int

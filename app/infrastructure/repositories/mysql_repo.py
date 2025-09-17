@@ -39,8 +39,8 @@ class MySQLPosturalErrorRepository(IMySQLRepo):
         try:
             session = mysql_connection.get_async_session()
             model = PosturalErrorModel(
-                min_sec=postural_error.min_sec,
-                frame=postural_error.frame,
+                min_sec_init=postural_error.min_sec_init,
+                min_sec_end=postural_error.min_sec_end,
                 explication=postural_error.explication,
                 id_practice=postural_error.id_practice
             )
@@ -85,8 +85,8 @@ class MySQLPosturalErrorRepository(IMySQLRepo):
     def _model_to_entity(self, model: PosturalErrorModel) -> PosturalError:
         return PosturalError(
             id=model.id,
-            min_sec=model.min_sec,
-            frame=model.frame,
+            min_sec_init=model.min_sec_init,
+            min_sec_end=model.min_sec_end,
             explication=model.explication,
             id_practice=model.id_practice
         )

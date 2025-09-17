@@ -3,8 +3,8 @@ from typing import Optional
 
 @dataclass
 class PosturalError:
-    min_sec: str
-    frame: int
+    min_sec_init: str
+    min_sec_end: int
     explication: str
     id_practice: int
     id: Optional[int] = None

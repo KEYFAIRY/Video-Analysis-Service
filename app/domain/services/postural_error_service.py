@@ -46,22 +46,18 @@ class PosturalErrorService:
         video_route = data.video_route
         scale = data.scale
         reps = data.reps
+        bpm = data.bpm
 
         try:
             logger.info(
-                "Processing errors for uid=%s, practice_id=%s, video=%s, scale=%s, reps=%s",
+                "Processing errors for uid=%s, practice_id=%s, video=%s, scale=%s, reps=%s, bpm=%s",
                 uid,
                 practice_id,
                 video_route,
                 scale,
                 reps,
-                extra={
-                    "uid": uid,
-                    "practice_id": practice_id,
-                    "video_route": video_route,
-                    "scale": scale,
-                    "reps": reps,
-                },
+                bpm,
+                extra={"uid": uid, "practice_id": practice_id, "video": video_route, "scale": scale, "reps": reps, "bpm": bpm}
             )
             
             # 1. Ejecutar análisis de video en thread pool (CPU-intensivo)
@@ -71,7 +67,8 @@ class PosturalErrorService:
                 self._executor, 
                 process_video, 
                 video_route, 
-                practice_id
+                practice_id,
+                bpm,
             )
             logger.debug(f"Video analysis completed for practice_id={practice_id}, found {len(errors)} errors")
             
