@@ -48,7 +48,7 @@ def set_deterministic_environment():
     os.environ['PYTHONIOENCODING'] = 'utf-8'
 
 # -----------------------
-# Helpers matemáticos (más robustos)
+# Helpers matemáticos
 # -----------------------
 def angle_between_points(a, b, c):
     """Cálculo de ángulo más preciso y consistente."""
@@ -79,7 +79,7 @@ def format_seconds_to_mmss(seconds):
     return f"{mm:02}:{ss:02}"
 
 # -----------------------
-# Funciones de validación (idénticas al Código 1)
+# Funciones de validación
 # -----------------------
 def validate_hand_quality(hand_landmarks, w, h):
     visible_landmarks = 0
@@ -99,7 +99,7 @@ def validate_hand_quality(hand_landmarks, w, h):
     return is_valid, visible_landmarks, avg_confidence
 
 def detect_obstruction_in_regions(frame, elbows_detected, manos_detectadas):
-    """Detecta obstrucciones en regiones críticas - IMPLEMENTACIÓN COMPLETA DEL CÓDIGO 1"""
+    """Detecta obstrucciones en regiones críticas"""
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     regions_of_interest = []
 
@@ -136,7 +136,7 @@ def detect_obstruction_in_regions(frame, elbows_detected, manos_detectadas):
     return False
 
 def validate_hands_positioning(manos_detectadas):
-    """Validación completa de posicionamiento - DEL CÓDIGO 1"""
+    """Validación completa de posicionamiento"""
     if len(manos_detectadas) != 2:
         return False
 
@@ -154,7 +154,7 @@ def validate_hands_positioning(manos_detectadas):
     return True
 
 # -----------------------
-# Reglas de detección de errores (del Código 1)
+# Reglas de detección de errores
 # -----------------------
 def wrist_rules(wrist, mid_wrist, elbow, hand_side):
     if elbow is None:
@@ -174,17 +174,17 @@ def abduction_rules(wrist, fingers, hand_side):
     return errors
 
 def get_error_description(error_type: str) -> str:
-    """Descripción legible de errores - MEJORADA"""
+    """Descripción legible de errores"""
     if "wrist_rules" in error_type:
         hand = "izquierda" if "izquierda" in error_type else "derecha"
-        return f"Flexión radial/cubital en mano {hand}"
+        return f"Flexion radial/cubital en mano {hand}"
     elif "abduction_rules" in error_type:
         hand = "izquierda" if "izquierda" in error_type else "derecha"
         if "dedos_" in error_type:
             parts = error_type.split("_")
             if len(parts) >= 4:
                 finger1, finger2 = parts[-2], parts[-1]
-                return f"Ángulo excesivo entre dedos {finger1}-{finger2} en mano {hand}"
+                return f"Angulo excesivo entre dedos {finger1}-{finger2} en mano {hand}"
         return f"Error de abducción en mano {hand}"
     return error_type
 
@@ -270,7 +270,7 @@ def process_video(video_path: str, practice_id: int, bpm: int) -> list['Postural
     """
     Procesamiento determinista de video - MISMA LÓGICA DEL CÓDIGO 1
     """
-    # CRÍTICO: Re-establecer semillas antes de cada procesamiento
+    # Re-establecer semillas antes de cada procesamiento
     set_deterministic_environment()
     
     # Obtener modelos inicializados
@@ -287,7 +287,7 @@ def process_video(video_path: str, practice_id: int, bpm: int) -> list['Postural
     frame_idx = 0
     results = []
     
-    # Sistema de seguimiento de errores (del Código 1)
+    # Seguimiento de errores
     ongoing_errors = {}
     incidents = []
     
@@ -302,18 +302,18 @@ def process_video(video_path: str, practice_id: int, bpm: int) -> list['Postural
             _finalize_all_ongoing_errors(ongoing_errors, incidents)
             break
 
-        # Procesar solo ciertos frames por segundo (del Código 1)
+        # Procesar solo ciertos frames por segundo
         frames_interval = max(1, int(fps / FRAMES_PER_SECOND_TO_PROCESS))
         if frame_idx % frames_interval != 0:
             frame_idx += 1
             continue
 
-        # PROCESAMIENTO COMPLETO DEL FRAME (lógica del Código 1)
+        # PROCESAMIENTO COMPLETO DEL FRAME
         h, w = frame.shape[:2]
         detected_errors = []
         elbows = {}
 
-        # ===== DETECCIÓN DE CODOS CON YOLO (lógica completa) =====
+        # ===== DETECCIÓN DE CODOS CON YOLO =====
         results_yolo = yolo_model.predict(frame, imgsz=640, conf=MIN_ELBOW_CONFIDENCE, verbose=False)
         elbows_detected = []
         yolo_valid = False
@@ -331,14 +331,14 @@ def process_video(video_path: str, practice_id: int, bpm: int) -> list['Postural
                 left_conf = confs[person_idx][7] if confs is not None else 1.0
                 right_conf = confs[person_idx][8] if confs is not None else 1.0
 
-                # VALIDACIÓN COMPLETA DE CONFIANZA (del Código 1)
+                # VALIDACIÓN COMPLETA DE CONFIANZA
                 if left_conf > MIN_ELBOW_CONFIDENCE and right_conf > MIN_ELBOW_CONFIDENCE:
                     elbows_detected.extend([left_elbow, right_elbow])
                     elbows["izquierda"] = left_elbow
                     elbows["derecha"] = right_elbow
                     yolo_valid = True
 
-        # ===== DETECCIÓN DE MANOS CON MEDIAPIPE (lógica completa) =====
+        # ===== DETECCIÓN DE MANOS CON MEDIAPIPE =====
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         res = hands_detector.process(rgb)
         manos_detectadas = []
@@ -358,7 +358,7 @@ def process_video(video_path: str, practice_id: int, bpm: int) -> list['Postural
 
         total_processed += 1
 
-        # ===== VALIDACIONES COMPLETAS (todas del Código 1) =====
+        # ===== VALIDACIONES COMPLETAS =====
         
         # 1. Validación básica de detecciones
         if len(manos_detectadas) != 2 or len(elbows_detected) != 2 or not yolo_valid or not hands_valid:
@@ -387,7 +387,7 @@ def process_video(video_path: str, practice_id: int, bpm: int) -> list['Postural
             frame_idx += 1
             continue
 
-        # ===== ANÁLISIS DE ERRORES (del Código 1) =====
+        # ===== ANÁLISIS DE ERRORES =====
         manos_detectadas.sort(key=lambda m: m[0])
 
         for i, (_, wrist, middle_mcp, hand_landmarks, lm) in enumerate(manos_detectadas):
@@ -404,7 +404,7 @@ def process_video(video_path: str, practice_id: int, bpm: int) -> list['Postural
             abduction_errors = abduction_rules(wrist, fingers, hand_side)
             detected_errors.extend(abduction_errors)
 
-        # ===== MANEJO DE INCIDENTES (lógica completa del Código 1) =====
+        # ===== MANEJO DE INCIDENTES =====
         current_time = frame_idx / fps if fps > 0 else 0
         current_error_set = set(detected_errors)
 
@@ -458,7 +458,7 @@ def process_video(video_path: str, practice_id: int, bpm: int) -> list['Postural
     return results
 
 # -----------------------
-# Funciones auxiliares de finalización (del Código 1)
+# Funciones auxiliares de finalización
 # -----------------------
 def _finalize_error(error_type, ongoing_errors):
     """Finaliza un error específico - SOLO ANÁLISIS DE DATOS"""
