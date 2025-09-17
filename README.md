@@ -34,6 +34,11 @@ Video analysis service for detecting non ergonomic hand postures
 │   │   ├── 📁 database/                # Database adapters
 │   │   │   └── 📁 models/              # Database models
 │   │   ├── 📁 video/                   # Video analysis related
+│   │   │   ├── analyzer.py             # Main algorith to analyze video
+│   │   │   ├── 📁 detection/           # Detection of valid frames
+│   │   │   ├── 📁 models/              # YOLO and Mediapipe models management
+│   │   │   ├── 📁 rules/               # Main error detection and tracking
+│   │   │   └── 📁 utils/               # Utils
 │   │   └── 📁 repositories/            # Concrete repository implementations
 │   └── 📁 shared/                      # Shared utilities
 │       ├── constants.py                # Global constants
