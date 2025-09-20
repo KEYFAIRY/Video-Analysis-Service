@@ -4,14 +4,14 @@ import logging
 from aiokafka import AIOKafkaConsumer
 from app.core.config import settings
 from app.application.use_cases.process_and_store_error import ProcessAndStoreErrorUseCase
-from app.domain.services.mongo_practice_service import MongoPracticeService
+from app.domain.services.metadata_practice_service import MetadataPracticeService 
 from app.domain.services.postural_error_service import PosturalErrorService
 from app.infrastructure.kafka.kafka_message import KafkaMessage
 from app.infrastructure.kafka.kafka_producer import KafkaProducer
 from app.infrastructure.repositories.local_video_repo import LocalVideoRepository
 from app.infrastructure.repositories.mongo_metadata_repo import MongoMetadataRepo
 from app.application.dto.practice_data_dto import PracticeDataDTO
-from app.infrastructure.repositories.mysql_repo import MySQLPosturalErrorRepository
+from app.infrastructure.repositories.mysql_postural_error_repo import MySQLPosturalErrorRepository
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ async def start_kafka_consumer(kafka_producer: KafkaProducer):
     video_repo = LocalVideoRepository()
 
     postural_service = PosturalErrorService(mysql_repo, video_repo)
-    mongo_service = MongoPracticeService(mongo_repo)
+    mongo_service = MetadataPracticeService(mongo_repo)
 
     use_case = ProcessAndStoreErrorUseCase(
         postural_service=postural_service,

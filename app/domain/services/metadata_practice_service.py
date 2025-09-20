@@ -3,7 +3,7 @@ from app.domain.repositories.i_metadata_repo import IMetadataRepo
 
 logger = logging.getLogger(__name__)
 
-class MongoPracticeService:
+class MetadataPracticeService:
     """Domain service for operations on practices in MongoDB"""
 
     def __init__(self, mongo_repo: IMetadataRepo):

@@ -1,6 +1,4 @@
 import logging
-from typing import List
-from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from app.domain.entities.postural_error import PosturalError
 from app.domain.repositories.i_postural_error_repo import IPosturalErrorRepo
@@ -12,27 +10,6 @@ logger = logging.getLogger(__name__)
 
 class MySQLPosturalErrorRepository(IPosturalErrorRepo):
     """Concrete implementation of IPosturalErrorRepo using MySQL."""
-
-    async def list_by_practice_id(self, id_practice: int) -> List[PosturalError]:
-        session = None
-        try:
-            session = mysql_connection.get_async_session()
-            result = await session.execute(
-                select(PosturalErrorModel).where(PosturalErrorModel.id_practice == id_practice)
-            )
-            rows = result.scalars().all()
-            logger.debug(f"Fetched {len(rows)} postural errors for practice_id={id_practice}")
-            return [self._model_to_entity(row) for row in rows]
-        except SQLAlchemyError as e:
-            logger.error(
-                f"MySQL error listing postural errors for practice_id={id_practice}: {e}",
-                exc_info=True
-            )
-            raise DatabaseConnectionException(f"Error fetching postural errors: {str(e)}")
-        finally:
-            if session:
-                await session.close()
-            
 
     async def create(self, postural_error: PosturalError) -> PosturalError:
         session = None
