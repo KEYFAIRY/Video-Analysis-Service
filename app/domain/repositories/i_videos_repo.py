@@ -1,11 +1,8 @@
 from abc import ABC, abstractmethod
 
 class IVideoRepo(ABC):
-    """Abstract repository interface for reading videos."""
 
     @abstractmethod
-    async def read(self, path: str) -> bytes:
-        """
-        Reads the video content and return the content.
-        """
+    async def read(self, path: str, uid: str, practice_id: str) -> str:
+        """Reads the video content and return the content. Currently returns a string because of openCV implementations."""
         pass

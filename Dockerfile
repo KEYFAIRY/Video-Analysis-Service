@@ -21,15 +21,18 @@ RUN apt-get update && apt-get install -y \
 # Copiar requirements
 COPY requirements.txt .
 
-# Instalar dependencias de Python
+# Install PyTorch CPU-only first (much smaller and faster)
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
+# Instalar resto de dependencias
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Pre-download YOLO model to avoid runtime download issues
+RUN python -c "from ultralytics import YOLO; YOLO('yolo11m-pose.pt')"
 
 # Copiar todo el código fuente
 COPY . .
 
-# Exponer el puerto del servicio
-EXPOSE 8100
-
 # Comando por defecto al iniciar el contenedor
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8100", "--reload"]
+CMD ["python", "-m", "app.main"]

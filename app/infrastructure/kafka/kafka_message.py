@@ -6,5 +6,6 @@ class KafkaMessage:
     practice_id: int
     message: str
     scale: str
-    video_route: str
+    scale_type: str
     reps: str
+    bpm: int

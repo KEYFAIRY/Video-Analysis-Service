@@ -34,6 +34,11 @@ Video analysis service for detecting non ergonomic hand postures
 │   │   ├── 📁 database/                # Database adapters
 │   │   │   └── 📁 models/              # Database models
 │   │   ├── 📁 video/                   # Video analysis related
+│   │   │   ├── analyzer.py             # Main algorith to analyze video
+│   │   │   ├── 📁 detection/           # Detection of valid frames
+│   │   │   ├── 📁 models/              # YOLO and Mediapipe models management
+│   │   │   ├── 📁 rules/               # Main error detection and tracking
+│   │   │   └── 📁 utils/               # Utils
 │   │   └── 📁 repositories/            # Concrete repository implementations
 │   └── 📁 shared/                      # Shared utilities
 │       ├── constants.py                # Global constants
@@ -60,7 +65,7 @@ Video analysis service for detecting non ergonomic hand postures
 
 ### Create .env file, for example:
 
-Edit the .example.env file with yout actual variables, and rename it to .env
+Edit the .example.env file with actual variables, and rename it to .env
 
 
 ### Run the service
@@ -77,7 +82,7 @@ docker ps
 
 ### Test the service
 
-Developing kafdrop to manually test kafka functionalities, but the endpoints are accesible [Here](http://localhost:8100).
+Developing unit tests
 
 ### Stop the service
 

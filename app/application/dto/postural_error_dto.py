@@ -2,6 +2,6 @@ from dataclasses import dataclass
 
 @dataclass
 class PosturalErrorDTO:
-    min_sec: str
-    frame: int
+    min_sec_init: str
+    min_sec_end: int
     explication: str

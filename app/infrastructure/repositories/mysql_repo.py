@@ -3,15 +3,15 @@ from typing import List
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from app.domain.entities.postural_error import PosturalError
-from app.domain.repositories.i_mysql_repo import IMySQLRepo
+from app.domain.repositories.i_postural_error_repo import IPosturalErrorRepo
 from app.infrastructure.database.models.postural_error_model import PosturalErrorModel
 from app.infrastructure.database.mysql_connection import mysql_connection
 from app.core.exceptions import DatabaseConnectionException
 
 logger = logging.getLogger(__name__)
 
-class MySQLPosturalErrorRepository(IMySQLRepo):
-    """Concrete implementation of IMySQLRepo using MySQL."""
+class MySQLPosturalErrorRepository(IPosturalErrorRepo):
+    """Concrete implementation of IPosturalErrorRepo using MySQL."""
 
     async def list_by_practice_id(self, id_practice: int) -> List[PosturalError]:
         session = None
@@ -39,8 +39,8 @@ class MySQLPosturalErrorRepository(IMySQLRepo):
         try:
             session = mysql_connection.get_async_session()
             model = PosturalErrorModel(
-                min_sec=postural_error.min_sec,
-                frame=postural_error.frame,
+                min_sec_init=postural_error.min_sec_init,
+                min_sec_end=postural_error.min_sec_end,
                 explication=postural_error.explication,
                 id_practice=postural_error.id_practice
             )
@@ -85,8 +85,8 @@ class MySQLPosturalErrorRepository(IMySQLRepo):
     def _model_to_entity(self, model: PosturalErrorModel) -> PosturalError:
         return PosturalError(
             id=model.id,
-            min_sec=model.min_sec,
-            frame=model.frame,
+            min_sec_init=model.min_sec_init,
+            min_sec_end=model.min_sec_end,
             explication=model.explication,
             id_practice=model.id_practice
         )

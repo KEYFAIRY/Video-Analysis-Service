@@ -4,8 +4,6 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: video-analysis-service
-    ports:
-      - "${VIDEO_ANALYSIS_SERVICE_PORT:-8100}:8100"
     environment:
       APP_ENV: ${APP_ENV:-development}
 

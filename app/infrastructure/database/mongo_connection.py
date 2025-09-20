@@ -1,6 +1,6 @@
 import os
-from motor.motor_asyncio import AsyncIOMotorClient
 import logging
+from motor.motor_asyncio import AsyncIOMotorClient
 
 logger = logging.getLogger(__name__)
 
