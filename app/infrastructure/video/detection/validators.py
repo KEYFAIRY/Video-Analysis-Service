@@ -6,13 +6,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Configuración
+# Configuration
 MIN_HAND_DISTANCE = 100
 MIN_ELBOW_CONFIDENCE = 0.5
 MIN_HAND_LANDMARKS_VISIBLE = 18
 
 class FrameData(NamedTuple):
-    """Datos extraídos de un frame válido"""
+    """Extracted data from a valid frame"""
     is_valid: bool
     hands_data: List[Tuple]
     elbows_data: dict
@@ -21,12 +21,11 @@ class FrameData(NamedTuple):
 class FrameValidator:
     
     def validate_frame(self, frame, yolo_model, hands_detector) -> FrameData:
-        """Procesa frame completo"""
+        """Process complete frame"""
         h, w = frame.shape[:2]
-        detected_errors = []
         elbows = {}
         
-        # ===== DETECCIÓN DE CODOS CON YOLO =====
+        # ===== ELBOW DETECTION WITH YOLO =====
         results_yolo = yolo_model.predict(frame, imgsz=640, conf=MIN_ELBOW_CONFIDENCE, verbose=False)
         elbows_detected = []
         yolo_valid = False
@@ -50,10 +49,10 @@ class FrameValidator:
                     elbows["derecha"] = right_elbow
                     yolo_valid = True
         
-        # ===== DETECCIÓN DE MANOS CON MEDIAPIPE =====
+        # ===== HAND DETECTION WITH MEDIAPIPE =====
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         res = hands_detector.process(rgb)
-        manos_detectadas = []
+        detected_hands = []
         hands_valid = True
         
         if res.multi_hand_landmarks:
@@ -64,16 +63,16 @@ class FrameValidator:
                     lm = [(int(p.x * w), int(p.y * h)) for p in hand_landmarks.landmark]
                     wrist = lm[0]
                     middle_mcp = lm[9]
-                    manos_detectadas.append((wrist[0], wrist, middle_mcp, hand_landmarks, lm))
+                    detected_hands.append((wrist[0], wrist, middle_mcp, hand_landmarks, lm))
                 else:
                     hands_valid = False
         
-        # ===== VALIDACIONES COMPLETAS =====
-        is_valid = self._validate_all_conditions(frame, manos_detectadas, elbows_detected, yolo_valid, hands_valid)
+        # ===== ENTIRE VALIDATIONS =====
+        is_valid = self._validate_all_conditions(frame, detected_hands, elbows_detected, yolo_valid, hands_valid)
         
         return FrameData(
             is_valid=is_valid,
-            hands_data=manos_detectadas,
+            hands_data=detected_hands,
             elbows_data=elbows,
             frame_info={"width": w, "height": h}
         )
@@ -84,75 +83,78 @@ class FrameValidator:
         
         for landmark in hand_landmarks.landmark:
             x, y = int(landmark.x * w), int(landmark.y * h)
+            # Validate landmark is within frame bounds
             if 0 <= x < w and 0 <= y < h:
+                # Check visibility if available
                 if hasattr(landmark, 'visibility') and landmark.visibility > 0.5:
                     visible_landmarks += 1
                     confidence_sum += landmark.visibility
                 else:
                     visible_landmarks += 1
         
+        # Calculate average confidence
         avg_confidence = confidence_sum / visible_landmarks if visible_landmarks > 0 else 0
         is_valid = visible_landmarks >= MIN_HAND_LANDMARKS_VISIBLE
         return is_valid, visible_landmarks, avg_confidence
     
-    def _validate_all_conditions(self, frame, manos_detectadas, elbows_detected, yolo_valid, hands_valid):
-        # 1. Validación básica de detecciones
-        if len(manos_detectadas) != 2 or len(elbows_detected) != 2 or not yolo_valid or not hands_valid:
+    def _validate_all_conditions(self, frame, detected_hands, elbows_detected, yolo_valid, hands_valid):
+        # 1. Basic detection validations
+        if len(detected_hands) != 2 or len(elbows_detected) != 2 or not yolo_valid or not hands_valid:
             return False
         
-        # 2. Validación de posicionamiento
-        if not self._validate_hands_positioning(manos_detectadas):
+        # 2. Positional validation of hands
+        if not self._validate_hands_positioning(detected_hands):
             return False
         
-        # 3. Validación de obstrucciones
-        if self._detect_obstruction_in_regions(frame, elbows_detected, manos_detectadas):
+        # 3. Obstruction validation
+        if self._detect_obstruction_in_regions(frame, elbows_detected, detected_hands):
             return False
         
-        # 4. Validación de distancia entre muñecas
-        wrist1 = manos_detectadas[0][1]
-        wrist2 = manos_detectadas[1][1]
+        # 4. Validation of minimum distance between wrists
+        wrist1 = detected_hands[0][1]
+        wrist2 = detected_hands[1][1]
         dist = distance_between_points(wrist1, wrist2)
         if dist < MIN_HAND_DISTANCE:
             return False
         
         return True
     
-    def _validate_hands_positioning(self, manos_detectadas):
-        if len(manos_detectadas) != 2:
+    def _validate_hands_positioning(self, detected_hands):
+        if len(detected_hands) != 2:
             return False
         
-        manos_sorted = sorted(manos_detectadas, key=lambda m: m[0])
-        mano_izq, mano_der = manos_sorted
+        sorted_hands = sorted(detected_hands, key=lambda m: m[0])
+        left, right = sorted_hands
         
-        dist_horizontal = abs(mano_der[0] - mano_izq[0])
+        dist_horizontal = abs(right[0] - left[0])
         if dist_horizontal < MIN_HAND_DISTANCE:
             return False
         
-        dist_vertical = abs(mano_der[1][1] - mano_izq[1][1])
+        dist_vertical = abs(right[1][1] - left[1][1])
         if dist_vertical > 80:
             return False
         
         return True
     
-    def _detect_obstruction_in_regions(self, frame, elbows_detected, manos_detectadas):
+    def _detect_obstruction_in_regions(self, frame, elbows_detected, detected_hands):
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         regions_of_interest = []
         
-        # Regiones de manos
-        for _, wrist, _, _, _ in manos_detectadas:
+        # Hand regions
+        for _, wrist, _, _, _ in detected_hands:
             x, y = wrist
             x1, y1 = max(0, x-50), max(0, y-50)
             x2, y2 = min(frame.shape[1], x+50), min(frame.shape[0], y+50)
             regions_of_interest.append((x1, y1, x2, y2, "mano"))
         
-        # Regiones de codos
+        # Elbow regions
         for elbow in elbows_detected:
             x, y = elbow
             x1, y1 = max(0, x-40), max(0, y-40)
             x2, y2 = min(frame.shape[1], x+40), min(frame.shape[0], y+40)
             regions_of_interest.append((x1, y1, x2, y2, "codo"))
         
-        # Análisis de obstrucciones
+        # Obstruction detection using contours
         for x1, y1, x2, y2, region_type in regions_of_interest:
             roi = gray[y1:y2, x1:x2]
             if roi.size == 0:

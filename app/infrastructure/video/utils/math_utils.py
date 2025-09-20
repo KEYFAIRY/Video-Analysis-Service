@@ -1,7 +1,7 @@
 import numpy as np
 
 def angle_between_points(a, b, c):
-    """Cálculo de ángulo más preciso y consistente."""
+    """Calculates angle"""
     a, b, c = map(lambda p: np.array(p, dtype=np.float64), (a, b, c))
     ba, bc = a - b, c - b
     
@@ -19,6 +19,6 @@ def angle_between_points(a, b, c):
     return round(angle, 2)
 
 def distance_between_points(p1, p2):
-    """Distancia con precisión consistente."""
+    """Calculates distance"""
     dist = np.linalg.norm(np.array(p1, dtype=np.float64) - np.array(p2, dtype=np.float64))
     return round(dist, 2)

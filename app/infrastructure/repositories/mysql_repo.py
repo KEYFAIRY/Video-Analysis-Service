@@ -3,15 +3,15 @@ from typing import List
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from app.domain.entities.postural_error import PosturalError
-from app.domain.repositories.i_mysql_repo import IMySQLRepo
+from app.domain.repositories.i_postural_error_repo import IPosturalErrorRepo
 from app.infrastructure.database.models.postural_error_model import PosturalErrorModel
 from app.infrastructure.database.mysql_connection import mysql_connection
 from app.core.exceptions import DatabaseConnectionException
 
 logger = logging.getLogger(__name__)
 
-class MySQLPosturalErrorRepository(IMySQLRepo):
-    """Concrete implementation of IMySQLRepo using MySQL."""
+class MySQLPosturalErrorRepository(IPosturalErrorRepo):
+    """Concrete implementation of IPosturalErrorRepo using MySQL."""
 
     async def list_by_practice_id(self, id_practice: int) -> List[PosturalError]:
         session = None

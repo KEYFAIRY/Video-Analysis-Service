@@ -1,12 +1,11 @@
-from app.domain.repositories.i_mongo_repo import IMongoRepo
-from app.infrastructure.database.mongo_connection import mongo_connection
 import logging
+from app.domain.repositories.i_metadata_repo import IMetadataRepo
+from app.infrastructure.database.mongo_connection import mongo_connection
 
 logger = logging.getLogger(__name__)
 
-
-class MongoRepo(IMongoRepo):
-    """Concrete implementation of IMongoRepo using MongoDB."""
+class MongoMetadataRepo(IMetadataRepo):
+    """Concrete implementation of IMetadataRepo using MongoDB."""
 
     def __init__(self):
         try:

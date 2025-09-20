@@ -65,7 +65,7 @@ Video analysis service for detecting non ergonomic hand postures
 
 ### Create .env file, for example:
 
-Edit the .example.env file with yout actual variables, and rename it to .env
+Edit the .example.env file with actual variables, and rename it to .env
 
 
 ### Run the service
@@ -82,7 +82,7 @@ docker ps
 
 ### Test the service
 
-Developing kafdrop to manually test kafka functionalities, but the endpoints are accesible [Here](http://localhost:8100).
+Developing unit tests
 
 ### Stop the service
 

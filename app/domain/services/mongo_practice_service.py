@@ -1,13 +1,12 @@
-from app.domain.repositories.i_mongo_repo import IMongoRepo
 import logging
+from app.domain.repositories.i_metadata_repo import IMetadataRepo
 
 logger = logging.getLogger(__name__)
-
 
 class MongoPracticeService:
     """Domain service for operations on practices in MongoDB"""
 
-    def __init__(self, mongo_repo: IMongoRepo):
+    def __init__(self, mongo_repo: IMetadataRepo):
         self.mongo_repo = mongo_repo
 
     async def mark_video_done(self, uid: str, id_practice: int) -> bool:

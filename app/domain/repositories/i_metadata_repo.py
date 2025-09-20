@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class IMongoRepo(ABC):
+class IMetadataRepo(ABC):
     
     @abstractmethod
     async def mark_practice_video_done(self, uid: str, id_practice: int) -> bool:

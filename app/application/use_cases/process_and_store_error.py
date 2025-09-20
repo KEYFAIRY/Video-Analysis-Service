@@ -26,19 +26,18 @@ class ProcessAndStoreErrorUseCase:
         self.kafka_producer = kafka_producer
 
     async def execute(self, data: PracticeDataDTO) -> List[PosturalErrorDTO]:
-        if not data.uid or not data.practice_id or not data.video_route:
+        if not data.uid or not data.practice_id:
             logger.warning(
-                "Validation failed: uid=%s, practice_id=%s, video_route=%s",
-                data.uid, data.practice_id, data.video_route
+                "Validation failed: uid=%s, practice_id=%s",
+                data.uid, data.practice_id
             )
-            raise ValidationException("uid, practice_id, and video_route are required")
-        
+            raise ValidationException("uid and practice_id are required")
+
         try:
-            # 1️ Procesar y almacenar errores en MySQL
+            # 1️ Process and store errors in MySQL
             practice_data = PracticeData(
                 uid=data.uid,
                 practice_id=data.practice_id,
-                video_route=data.video_route,
                 scale=data.scale,
                 reps=data.reps,
                 bpm=data.bpm,
@@ -46,18 +45,17 @@ class ProcessAndStoreErrorUseCase:
             errors = await self.postural_service.process_and_store_error(practice_data)
             logger.info("Stored %d errors for practice_id=%s", len(errors), data.practice_id)
 
-            # 2️ Actualizar Mongo usando el servicio
+            # 2️ Update metadata in Mongo
             await self.mongo_service.mark_video_done(uid=str(data.uid), id_practice=data.practice_id)
             logger.info("Marked video as done in Mongo for uid=%s, practice_id=%s", data.uid, data.practice_id)
 
-            # 3️ Publicar mensaje en Kafka
+            # 3️ Publish message to kafka topic
             kafka_message = KafkaMessage(
                 uid=data.uid,
                 practice_id=data.practice_id,
                 message="video_done",
                 scale=data.scale,
                 scale_type=data.scale_type, 
-                video_route=data.video_route,
                 reps=data.reps,
                 bpm=data.bpm,
             )
@@ -66,7 +64,7 @@ class ProcessAndStoreErrorUseCase:
             
             await self.kafka_producer.publish_message(topic=settings.KAFKA_OUTPUT_TOPIC, message=kafka_message)
 
-            # 4️ Mapear a DTOs
+            # 4️ Map to DTOs
             return [
                 PosturalErrorDTO(
                     min_sec_init=e.min_sec_init,

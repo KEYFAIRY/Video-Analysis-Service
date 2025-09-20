@@ -1,58 +1,59 @@
-# service.py - Mantener la concurrencia pero con logging mejorado
-
 import asyncio
 import logging
 from typing import List
 from concurrent.futures import ThreadPoolExecutor
-
+from app.domain.entities.postural_error import PosturalError
+from app.domain.entities.practice_data import PracticeData
+from app.domain.repositories.i_postural_error_repo import IPosturalErrorRepo
+from app.domain.repositories.i_videos_repo import IVideoRepo
 from app.infrastructure.video.analyzer import process_video
 
 logger = logging.getLogger(__name__)
 
 class PosturalErrorService:
-    """Domain service for management of postural errors - Concurrencia mantenida"""
+    """Domain service for management of postural errors"""
 
-    def __init__(self, posture_repo: 'IMySQLRepo', video_repo: 'IVideoRepo'):
+    def __init__(self, posture_repo: IPosturalErrorRepo, video_repo: IVideoRepo):
         self.posture_repo = posture_repo
         self.video_repo = video_repo
-        # Mantener thread pool original - el determinismo viene del analyzer
+        # Keep original thread pool for video processing
         self._executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="video_processing")
 
-    async def process_and_store_error(self, data: 'PracticeData') -> List['PosturalError']:
-        """Procesa video y almacena errores - MANTENER LÓGICA ORIGINAL."""
+    async def process_and_store_error(self, data: PracticeData) -> List[PosturalError]:
+        """Processes video to detect postural errors and stores them in the database."""
         uid = data.uid
         practice_id = data.practice_id
-        video_route = data.video_route
         scale = data.scale
         reps = data.reps
         bpm = data.bpm
 
         try:
             logger.info(
-                "Processing errors for uid=%s, practice_id=%s, video=%s, scale=%s, reps=%s, bpm=%s",
+                "Processing errors for uid=%s, practice_id=%s, scale=%s, reps=%s, bpm=%s",
                 uid,
                 practice_id,
-                video_route,
                 scale,
                 reps,
                 bpm,
-                extra={"uid": uid, "practice_id": practice_id, "video": video_route, "scale": scale, "reps": reps, "bpm": bpm}
+                extra={"uid": uid, "practice_id": practice_id, "scale": scale, "reps": reps, "bpm": bpm}
             )
             
-            # 1️ Ejecutar análisis de video en thread pool (CPU-intensivo) 
-            # DETERMINISMO GARANTIZADO POR EL ANALYZER, no por la concurrencia
+            # 1. Read video (currently, returns just the path, because of opencv implementation)
+            video_path = await self.video_repo.read(uid, practice_id)
+            
+            # 2. Analyze video in thread pool
             logger.debug(f"Starting video analysis for practice_id={practice_id}")
             loop = asyncio.get_event_loop()
             errors = await loop.run_in_executor(
                 self._executor, 
-                process_video,  # Esta función YA ES determinista 
-                video_route, 
+                process_video,
+                video_path, 
                 practice_id,
                 bpm,
             )
             logger.debug(f"Video analysis completed for practice_id={practice_id}, found {len(errors)} errors")
-            
-            # 2️ Almacenar errores en lotes para mejor rendimiento
+
+            # 3. Store errors in batches for better performance
             if errors:
                 await self._store_errors_batch(errors, practice_id)
             else:
@@ -78,9 +79,9 @@ class PosturalErrorService:
             )
             raise
 
-    async def _store_errors_batch(self, errors: List['PosturalError'], practice_id: int):
-        """Almacena errores en lotes - LÓGICA ORIGINAL MANTENIDA."""
-        batch_size = 5  # Procesar en lotes pequeños
+    async def _store_errors_batch(self, errors: List[PosturalError], practice_id: int):
+        """Stores errors in batches to optimize database writes."""
+        batch_size = 5
         total_errors = len(errors)
         
         logger.debug(f"Storing {total_errors} errors in batches of {batch_size} for practice_id={practice_id}")
@@ -92,15 +93,12 @@ class PosturalErrorService:
             
             logger.debug(f"Processing batch {batch_num}/{total_batches} ({len(batch)} errors)")
             
-            # Procesar lote con un pequeño delay para evitar sobrecarga
             tasks = []
             for error in batch:
                 task = asyncio.create_task(self.posture_repo.create(error))
                 tasks.append(task)
-                # Pequeño delay entre creaciones para evitar contención
                 await asyncio.sleep(0.01)  # 10ms
             
-            # Esperar que termine el lote actual
             try:
                 await asyncio.gather(*tasks)
                 logger.debug(f"Batch {batch_num}/{total_batches} completed successfully")
@@ -108,9 +106,8 @@ class PosturalErrorService:
                 logger.error(f"Error in batch {batch_num}/{total_batches}: {e}")
                 raise
             
-            # Pequeño delay entre lotes
             if i + batch_size < total_errors:
-                await asyncio.sleep(0.05)  # 50ms entre lotes
+                await asyncio.sleep(0.05)  # 50ms
 
     def __del__(self):
         """Cleanup del thread pool."""

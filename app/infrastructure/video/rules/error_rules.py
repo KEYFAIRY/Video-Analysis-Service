@@ -7,10 +7,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 class ErrorDetector:
-    """Detector de errores"""
+    """Error detection"""
     
     def detect_errors(self, frame_data: FrameData) -> List[str]:
-        """Detecta errores"""
+        """Detects errors"""
         if not frame_data.is_valid:
             return []
         
@@ -21,11 +21,11 @@ class ErrorDetector:
             hand_side = "izquierda" if i == 0 else "derecha"
             elbow = frame_data.elbows_data.get(hand_side, None)
             
-            # Detectar errores de muñeca (tu función original)
+            # Detect wrist errors
             wrist_errors = self._wrist_rules(wrist, middle_mcp, elbow, hand_side)
             detected_errors.extend(wrist_errors)
             
-            # Detectar errores de abducción (tu función original)
+            # Detect finger abduction errors
             tip_idx = [4, 8, 12, 16, 20]
             fingers = [lm[j] for j in tip_idx]
             abduction_errors = self._abduction_rules(wrist, fingers, hand_side)

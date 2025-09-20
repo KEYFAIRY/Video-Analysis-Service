@@ -6,11 +6,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# SEMILLA DETERMINÍSTICA
+# Deterministic seed
 RANDOM_SEED = 42
 
 def set_deterministic_environment():
-    """Configura entorno determinista para los modelos."""
+    """Configures deterministic environment for models."""
     # Python random
     random.seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
@@ -21,10 +21,10 @@ def set_deterministic_environment():
     if torch.cuda.is_available():
         torch.cuda.manual_seed(RANDOM_SEED)
         torch.cuda.manual_seed_all(RANDOM_SEED)
-        # CRÍTICO: Forzar comportamiento determinista
+        # Force deterministic behavior
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-    
-    # Variables de entorno para TensorFlow (MediaPipe)
+
+    # Environment variables for TensorFlow (MediaPipe)
     os.environ['TF_DETERMINISTIC_OPS'] = '1'
     os.environ['PYTHONIOENCODING'] = 'utf-8'

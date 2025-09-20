@@ -2,7 +2,6 @@ import asyncio
 import json
 import logging
 from aiokafka import AIOKafkaConsumer
-
 from app.core.config import settings
 from app.application.use_cases.process_and_store_error import ProcessAndStoreErrorUseCase
 from app.domain.services.mongo_practice_service import MongoPracticeService
@@ -10,7 +9,7 @@ from app.domain.services.postural_error_service import PosturalErrorService
 from app.infrastructure.kafka.kafka_message import KafkaMessage
 from app.infrastructure.kafka.kafka_producer import KafkaProducer
 from app.infrastructure.repositories.local_video_repo import LocalVideoRepository
-from app.infrastructure.repositories.mongo_repo import MongoRepo
+from app.infrastructure.repositories.mongo_metadata_repo import MongoMetadataRepo
 from app.application.dto.practice_data_dto import PracticeDataDTO
 from app.infrastructure.repositories.mysql_repo import MySQLPosturalErrorRepository
 
@@ -21,7 +20,7 @@ semaphore = asyncio.Semaphore(MAX_CONCURRENT_VIDEOS)
 
 async def start_kafka_consumer(kafka_producer: KafkaProducer):
     mysql_repo = MySQLPosturalErrorRepository()
-    mongo_repo = MongoRepo()
+    mongo_repo = MongoMetadataRepo()
     video_repo = LocalVideoRepository()
 
     postural_service = PosturalErrorService(mysql_repo, video_repo)
@@ -36,7 +35,7 @@ async def start_kafka_consumer(kafka_producer: KafkaProducer):
     consumer = AIOKafkaConsumer(
         settings.KAFKA_INPUT_TOPIC,
         bootstrap_servers=settings.KAFKA_BROKER,
-        enable_auto_commit=True,
+        enable_auto_commit=False,
         auto_offset_reset=settings.KAFKA_AUTO_OFFSET_RESET,
         group_id=settings.KAFKA_GROUP_ID,
     )
@@ -51,6 +50,7 @@ async def start_kafka_consumer(kafka_producer: KafkaProducer):
                 try:
                     errors = await use_case.execute(dto)
                     logger.info(f"Processed KafkaMessage with {len(errors)} errors")
+                    await consumer.commit()
                 except Exception as e:
                     logger.error(f"Error processing message in background: {e}", exc_info=True)
 
@@ -65,7 +65,6 @@ async def start_kafka_consumer(kafka_producer: KafkaProducer):
                 dto = PracticeDataDTO(
                     uid=kafka_msg.uid,
                     practice_id=kafka_msg.practice_id,
-                    video_route=kafka_msg.video_route,
                     scale=kafka_msg.scale,
                     scale_type=kafka_msg.scale_type,
                     reps=kafka_msg.reps,

@@ -4,7 +4,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class ErrorTracker:
-    """Seguimiento temporal"""
+    """Temporal tracking"""
     
     def __init__(self):
         self.ongoing_errors: Dict = {}
@@ -13,7 +13,7 @@ class ErrorTracker:
     def update_errors(self, detected_errors: List[str], current_time: float, frame_idx: int) -> List:
         current_error_set = set(detected_errors)
         
-        # Finalizar errores que ya no están presentes
+        # Finish errors that are no longer detected
         errors_to_finalize = []
         for error_type in self.ongoing_errors:
             if error_type not in current_error_set:
@@ -24,14 +24,14 @@ class ErrorTracker:
             if incident:
                 self.incidents.append(incident)
         
-        # Procesar errores actuales
+        # Process currently detected errors
         for error_type in current_error_set:
             if error_type in self.ongoing_errors:
-                # Continuar error existente
+                # Continue existing error
                 self.ongoing_errors[error_type]['end_time'] = current_time
                 self.ongoing_errors[error_type]['end_frame'] = frame_idx
             else:
-                # Iniciar nuevo error
+                # Start new error
                 self.ongoing_errors[error_type] = {
                     'start_time': current_time,
                     'end_time': current_time,
@@ -69,7 +69,7 @@ class ErrorTracker:
             'description': description
         }
         
-        # Remover del diccionario
+        # Remove from ongoing errors
         del self.ongoing_errors[error_type]
         
         return incident

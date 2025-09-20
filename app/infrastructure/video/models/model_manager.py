@@ -13,7 +13,7 @@ YOLO_WEIGHTS = "yolo11m-pose.pt"
 MIN_HAND_CONFIDENCE = 0.85
 
 class ModelManager:
-    """Gestor singleton para modelos de ML"""
+    """Singleton class to manage ML models."""
     
     _instance = None
     _yolo_model = None
@@ -26,17 +26,17 @@ class ModelManager:
     
     @classmethod
     def get_models(cls) -> Tuple:
-        """Obtiene las instancias de los modelos (singleton pattern)."""
+        """Gets or initializes the ML models."""
         instance = cls()
         if instance._yolo_model is None or instance._hands_detector is None:
             instance._initialize_models()
         return instance._yolo_model, instance._hands_detector
     
     def _initialize_models(self):
-        """Inicializa modelos con configuración determinista."""
+        """Initializes the ML models with deterministic settings."""
         set_deterministic_environment()
         
-        # YOLO con carga segura
+        # YOLO
         self._yolo_model = self._safe_load_yolo_model(YOLO_WEIGHTS)
         
         # MediaPipe
@@ -51,7 +51,7 @@ class ModelManager:
         logger.info("All models initialized successfully")
     
     def _safe_load_yolo_model(self, weights_path: str, max_retries: int = 3):
-        """Carga segura del modelo YOLO con validación y reintentos."""
+        """Safely loads the YOLO model with validation and retries."""
         for attempt in range(max_retries):
             try:
                 if os.path.exists(weights_path):
