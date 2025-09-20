@@ -11,7 +11,7 @@ from app.infrastructure.kafka.kafka_producer import KafkaProducer
 from app.infrastructure.repositories.local_video_repo import LocalVideoRepository
 from app.infrastructure.repositories.mongo_metadata_repo import MongoMetadataRepo
 from app.application.dto.practice_data_dto import PracticeDataDTO
-from app.infrastructure.repositories.mysql_repo import MySQLPosturalErrorRepository
+from app.infrastructure.repositories.mysql_postural_error_repo import MySQLPosturalErrorRepository
 
 logger = logging.getLogger(__name__)
 
