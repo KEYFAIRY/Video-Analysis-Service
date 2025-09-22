@@ -15,10 +15,12 @@ class KafkaProducer:
     async def start(self):
         logger.info("Starting Kafka Producer...")
         await self._producer.start()
+        logger.info("Kafka Producer started")
 
     async def stop(self):
         logger.info("Stopping Kafka Producer...")
         await self._producer.stop()
+        logger.info("Kafka Producer stopped")
 
     async def publish_message(self, topic: str, message: KafkaMessage):
         """

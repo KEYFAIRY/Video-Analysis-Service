@@ -65,8 +65,13 @@ async def start_kafka_consumer(kafka_producer: KafkaProducer):
                 dto = PracticeDataDTO(
                     uid=kafka_msg.uid,
                     practice_id=kafka_msg.practice_id,
+                    date=kafka_msg.date,
+                    time=kafka_msg.time,
                     scale=kafka_msg.scale,
                     scale_type=kafka_msg.scale_type,
+                    num_postural_errors=0,  # Placeholder, actual value not in KafkaMessage
+                    num_musical_errors=0,  # Placeholder, actual value not in KafkaMessage
+                    duration=kafka_msg.duration,
                     reps=kafka_msg.reps,
                     bpm=kafka_msg.bpm,
                 )
