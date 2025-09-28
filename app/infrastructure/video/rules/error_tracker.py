@@ -77,13 +77,13 @@ class ErrorTracker:
     def _get_error_description(self, error_type: str) -> str:
         if "wrist_rules" in error_type:
             hand = "izquierda" if "izquierda" in error_type else "derecha"
-            return f"Flexion radial/cubital en mano {hand}"
+            return f"Flexion radial/cubital menor a 155 grados en mano {hand}"
         elif "abduction_rules" in error_type:
             hand = "izquierda" if "izquierda" in error_type else "derecha"
             if "dedos_" in error_type:
                 parts = error_type.split("_")
                 if len(parts) >= 4:
                     finger1, finger2 = parts[-2], parts[-1]
-                    return f"Angulo excesivo entre dedos {finger1}-{finger2} en mano {hand}"
+                    return f"Angulo excesivo (mayor a 60 grados) entre dedos {finger1}-{finger2} en mano {hand}"
             return f"Error de abducción en mano {hand}"
         return error_type
