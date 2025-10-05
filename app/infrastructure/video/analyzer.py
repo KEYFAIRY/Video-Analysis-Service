@@ -10,7 +10,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def process_video(video_path: str, practice_id: int, bpm: int, figure: int) -> list['PosturalError']:
+def process_video(video_path: str, practice_id: int, bpm: int, figure: float) -> list[PosturalError]:
 
     # Re-establecer semillas antes de cada procesamiento
     set_deterministic_environment()
