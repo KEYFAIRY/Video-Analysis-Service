@@ -72,8 +72,9 @@ async def start_kafka_consumer(kafka_producer: KafkaProducer):
                     num_postural_errors=0,  # Placeholder, actual value not in KafkaMessage
                     num_musical_errors=0,  # Placeholder, actual value not in KafkaMessage
                     duration=kafka_msg.duration,
-                    reps=kafka_msg.reps,
                     bpm=kafka_msg.bpm,
+                    figure=kafka_msg.figure,
+                    octaves=kafka_msg.octaves,
                 )
 
                 # Crear la tarea y guardarla en la lista

@@ -24,18 +24,19 @@ class PosturalErrorService:
         uid = data.uid
         practice_id = data.practice_id
         scale = data.scale
-        reps = data.reps
         bpm = data.bpm
-
+        figure = data.figure
+        octaves = data.octaves
         try:
             logger.info(
-                "Processing errors for uid=%s, practice_id=%s, scale=%s, reps=%s, bpm=%s",
+                "Processing errors for uid=%s, practice_id=%s, scale=%s, bpm=%s, figure=%s, octaves=%s",
                 uid,
                 practice_id,
                 scale,
-                reps,
                 bpm,
-                extra={"uid": uid, "practice_id": practice_id, "scale": scale, "reps": reps, "bpm": bpm}
+                figure,
+                octaves,
+                extra={"uid": uid, "practice_id": practice_id, "scale": scale, "bpm": bpm, "figure": figure, "octaves": octaves}
             )
             
             # 1. Read video (currently, returns just the path, because of opencv implementation)
@@ -50,7 +51,9 @@ class PosturalErrorService:
                 video_path, 
                 practice_id,
                 bpm,
+                figure,
             )
+            
             logger.debug(f"Video analysis completed for practice_id={practice_id}, found {len(errors)} errors")
 
             # 3. Store errors in batches for better performance

@@ -11,5 +11,6 @@ class PracticeDataDTO:
     num_postural_errors: int
     num_musical_errors: int
     duration: int
-    reps: int
     bpm: int
+    figure: int
+    octaves: int

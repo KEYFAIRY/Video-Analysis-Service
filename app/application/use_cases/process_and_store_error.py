@@ -39,8 +39,9 @@ class ProcessAndStoreErrorUseCase:
                 uid=data.uid,
                 practice_id=data.practice_id,
                 scale=data.scale,
-                reps=data.reps,
                 bpm=data.bpm,
+                figure=data.figure,
+                octaves=data.octaves,
             )
             errors = await self.postural_service.process_and_store_error(practice_data)
             logger.info("Stored %d errors for practice_id=%s", len(errors), data.practice_id)
@@ -59,8 +60,9 @@ class ProcessAndStoreErrorUseCase:
                 scale=data.scale,
                 scale_type=data.scale_type,
                 duration=data.duration,
-                reps=data.reps,
                 bpm=data.bpm,
+                figure=data.figure,
+                octaves=data.octaves,
             )
             
             logger.info("Prepared Kafka message: %s", kafka_message)

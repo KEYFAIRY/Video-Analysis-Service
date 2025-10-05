@@ -10,7 +10,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def process_video(video_path: str, practice_id: int, bpm: int) -> list['PosturalError']:
+def process_video(video_path: str, practice_id: int, bpm: int, figure: int) -> list['PosturalError']:
 
     # Re-establecer semillas antes de cada procesamiento
     set_deterministic_environment()
@@ -24,7 +24,7 @@ def process_video(video_path: str, practice_id: int, bpm: int) -> list['Postural
     error_tracker = ErrorTracker()
     
     # Configuración
-    FRAMES_PER_SECOND_TO_PROCESS = max(1, int((bpm / 60) * 2))
+    FRAMES_PER_SECOND_TO_PROCESS = max(1, int(((bpm*figure) / 60) * 2))
     MIN_ERROR_DURATION = 1.0
     
     cap = cv2.VideoCapture(video_path)

@@ -5,5 +5,6 @@ class PracticeData:
     uid: int
     practice_id: int
     scale: str
-    reps: str
     bpm: int
+    figure: int
+    octaves: int
