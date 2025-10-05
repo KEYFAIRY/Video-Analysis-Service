@@ -12,5 +12,5 @@ class PracticeDataDTO:
     num_musical_errors: int
     duration: int
     bpm: int
-    figure: int
+    figure: float
     octaves: int
