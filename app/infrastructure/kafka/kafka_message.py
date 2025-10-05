@@ -10,5 +10,6 @@ class KafkaMessage:
     scale: str
     scale_type: str
     duration: int
-    reps: int
     bpm: int
+    figure: int
+    octaves: int
