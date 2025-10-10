@@ -8,7 +8,8 @@ class PosturalErrorModel(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     min_sec_init = Column(String(50), nullable=False)
-    min_sec_end = Column(String(50), nullable=False)    
+    min_sec_end = Column(String(50), nullable=False)
+    frame = Column(Integer, nullable=False)
     explication = Column(String(500), nullable=True)
     id_practice = Column(Integer, nullable=False)
     
