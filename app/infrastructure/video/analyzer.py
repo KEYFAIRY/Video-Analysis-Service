@@ -77,15 +77,17 @@ def process_video(video_path: str, practice_id: int, bpm: int, figure: float) ->
         if inc and inc['duration'] >= MIN_ERROR_DURATION:
             min_sec_init = format_seconds_to_mmss(inc['start_time'])
             min_sec_end = format_seconds_to_mmss(inc['end_time'])
-            
+
             results.append(
                 PosturalError(
                     min_sec_init=min_sec_init,
                     min_sec_end=min_sec_end,
+                    frame=inc['critical_frame'],
                     explication=inc['description'],
                     id_practice=practice_id
                 )
             )
+
 
     logger.info(f"Video {video_path}: processed {total_processed} frames, discarded {discarded_frames}, found {len(results)} errors")
     return results

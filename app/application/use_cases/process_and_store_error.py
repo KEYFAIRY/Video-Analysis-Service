@@ -74,6 +74,7 @@ class ProcessAndStoreErrorUseCase:
                 PosturalErrorDTO(
                     min_sec_init=e.min_sec_init,
                     min_sec_end=e.min_sec_end,
+                    frame=e.frame,
                     explication=e.explication
                 ) for e in errors
             ]
