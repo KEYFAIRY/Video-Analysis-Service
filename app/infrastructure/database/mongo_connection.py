@@ -34,6 +34,17 @@ class MongoConnection:
                 logger.exception("Error connecting to MongoDB")
                 raise RuntimeError(f"Failed to connect to MongoDB: {str(e)}")
         return self.db
+    
+    async def verify_connection(self):
+        if not self.client:
+            raise RuntimeError("MongoDB client not initialized. Call connect() first.")
+        
+        try:
+            await self.client.admin.command('ping')
+            logger.info(f"✅ MongoDB connection verified: {self.mongo_db_name}")
+        except Exception as e:
+            logger.error(f"❌ MongoDB connection verification failed: {e}")
+            raise
 
     async def close(self):
         if self.client:

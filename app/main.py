@@ -13,24 +13,45 @@ configure_logging()
 logger = logging.getLogger(__name__)
 
 
+async def initialize_databases(retry_delay: int = 5):
+    mysql_connected = False
+    mongo_connected = False
+    attempt = 0
+    
+    while not (mysql_connected and mongo_connected):
+        logger.info(f"Reintentando conexión a BDs (intento {attempt + 1})...")
+        await asyncio.sleep(retry_delay)
+        
+        attempt += 1
+        
+        # MySQL
+        if not mysql_connected:
+            try:
+                mysql_connection.mysql_connection.init_engine()
+                await mysql_connection.mysql_connection.verify_connection()
+                mysql_connected = True
+            except Exception as e:
+                logger.warning(f"⚠️  MySQL connection failed: {e}")
+        
+        # MongoDB
+        if not mongo_connected:
+            try:
+                mongo_connection.mongo_connection.connect()
+                await mongo_connection.mongo_connection.verify_connection()
+                mongo_connected = True
+            except Exception as e:
+                logger.warning(f"⚠️  MongoDB connection failed: {e}")
+    
+    logger.info("✅ Todas las conexiones de BD establecidas y verificadas")
+
+
 @asynccontextmanager
 async def lifespan():
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     logger.info(f"Environment: {settings.APP_ENV}")
 
     # ---------- DB Connections ----------
-    try:
-        # MySQL
-        mysql_connection.mysql_connection.init_engine()
-        logger.info("MySQL connection established")
-
-        # MongoDB
-        mongo_connection.mongo_connection.connect()
-        logger.info("MongoDB connection established")
-
-    except Exception as e:
-        logger.exception("Error initializing database connections")
-        raise
+    await initialize_databases(retry_delay=5)
 
     # ---------- Kafka ----------
     producer = KafkaProducer(bootstrap_servers=settings.KAFKA_BROKER)
