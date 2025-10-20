@@ -34,7 +34,8 @@ class DatabaseConnection:
                     pool_recycle=3600,
                     pool_size=10,      # número máximo de conexiones en el pool
                     max_overflow=5,    # conexiones extra si se saturan
-                    pool_timeout=30,   # Timeout para obtener conexión del pool
+                    pool_timeout=30,   # Timeout para obtener conexión del poolisolation_level="READ_COMMITTED",  # Nivel de aislamiento consistente
+                    isolation_level="READ_COMMITTED",  # Nivel de aislamiento consistente
                 )
                 self.async_session_factory = async_sessionmaker(
                     self.async_engine,
