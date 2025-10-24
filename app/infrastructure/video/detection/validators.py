@@ -1,15 +1,12 @@
 import cv2
-import numpy as np
 from typing import NamedTuple, List, Tuple
-from ..utils.math_utils import distance_between_points
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Configuration
-MIN_HAND_DISTANCE = 100
 MIN_ELBOW_CONFIDENCE = 0.5
 MIN_HAND_LANDMARKS_VISIBLE = 18
+MAX_HANDS_OVERLAP_RATIO = 0.3  # 30% del área de la mano más pequeña
 
 class FrameData(NamedTuple):
     """Extracted data from a valid frame"""
@@ -102,72 +99,43 @@ class FrameValidator:
         if len(detected_hands) != 2 or len(elbows_detected) != 2 or not yolo_valid or not hands_valid:
             return False
         
-        # 2. Positional validation of hands
-        if not self._validate_hands_positioning(detected_hands):
-            return False
-        
-        # 3. Obstruction validation
-        if self._detect_obstruction_in_regions(frame, elbows_detected, detected_hands):
-            return False
-        
-        # 4. Validation of minimum distance between wrists
-        wrist1 = detected_hands[0][1]
-        wrist2 = detected_hands[1][1]
-        dist = distance_between_points(wrist1, wrist2)
-        if dist < MIN_HAND_DISTANCE:
+        # 2. Validación de superposición de manos
+        if self._hands_are_superposed(detected_hands):
             return False
         
         return True
-    
-    def _validate_hands_positioning(self, detected_hands):
+
+    def _hands_are_superposed(self, detected_hands):
         if len(detected_hands) != 2:
             return False
-        
-        sorted_hands = sorted(detected_hands, key=lambda m: m[0])
-        left, right = sorted_hands
-        
-        dist_horizontal = abs(right[0] - left[0])
-        if dist_horizontal < MIN_HAND_DISTANCE:
-            return False
-        
-        dist_vertical = abs(right[1][1] - left[1][1])
-        if dist_vertical > 80:
-            return False
-        
-        return True
-    
-    def _detect_obstruction_in_regions(self, frame, elbows_detected, detected_hands):
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        regions_of_interest = []
-        
-        # Hand regions
-        for _, wrist, _, _, _ in detected_hands:
-            x, y = wrist
-            x1, y1 = max(0, x-50), max(0, y-50)
-            x2, y2 = min(frame.shape[1], x+50), min(frame.shape[0], y+50)
-            regions_of_interest.append((x1, y1, x2, y2, "mano"))
-        
-        # Elbow regions
-        for elbow in elbows_detected:
-            x, y = elbow
-            x1, y1 = max(0, x-40), max(0, y-40)
-            x2, y2 = min(frame.shape[1], x+40), min(frame.shape[0], y+40)
-            regions_of_interest.append((x1, y1, x2, y2, "codo"))
-        
-        # Obstruction detection using contours
-        for x1, y1, x2, y2, region_type in regions_of_interest:
-            roi = gray[y1:y2, x1:x2]
-            if roi.size == 0:
-                continue
-            
-            edges = cv2.Canny(roi, 50, 150)
-            contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            
-            for contour in contours:
-                area = cv2.contourArea(contour)
-                if region_type == "mano" and area > 500:
-                    return True
-                elif region_type == "codo" and area > 300:
-                    return True
-        
+
+        # Obtener bounding boxes de cada mano usando landmarks
+        def get_bbox(lm):
+            xs = [p[0] for p in lm]
+            ys = [p[1] for p in lm]
+            x_min, x_max = min(xs), max(xs)
+            y_min, y_max = min(ys), max(ys)
+            return (x_min, y_min, x_max, y_max)
+
+        bbox1 = get_bbox(detected_hands[0][4])  # lm de mano 1
+        bbox2 = get_bbox(detected_hands[1][4])  # lm de mano 2
+
+        # Calcular área de intersección
+        xA = max(bbox1[0], bbox2[0])
+        yA = max(bbox1[1], bbox2[1])
+        xB = min(bbox1[2], bbox2[2])
+        yB = min(bbox1[3], bbox2[3])
+
+        inter_width = max(0, xB - xA)
+        inter_height = max(0, yB - yA)
+        inter_area = inter_width * inter_height
+
+        # Área de la mano más pequeña
+        area1 = (bbox1[2] - bbox1[0]) * (bbox1[3] - bbox1[1])
+        area2 = (bbox2[2] - bbox2[0]) * (bbox2[3] - bbox2[1])
+        min_area = min(area1, area2)
+
+        # Si el área de intersección es mayor al 30% del área de una mano, están superpuestas
+        if min_area > 0 and inter_area / min_area > MAX_HANDS_OVERLAP_RATIO:
+            return True
         return False
