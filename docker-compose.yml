@@ -35,6 +35,16 @@ services:
     restart: unless-stopped
     networks:
       - app-network
+    depends_on:
+        mysql-db:
+            condition: service_healthy
+            restart: true
+        mongo-db:
+            condition: service_healthy
+            restart: true
+        broker:
+            condition: service_healthy
+            restart: true
 
 networks:
   app-network:
