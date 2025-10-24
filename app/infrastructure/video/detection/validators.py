@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 MIN_ELBOW_CONFIDENCE = 0.5
 MIN_HAND_LANDMARKS_VISIBLE = 18
-MAX_HANDS_OVERLAP_RATIO = 0.3  # 30% del área de la mano más pequeña
+MAX_HANDS_OVERLAP_RATIO = 0.5  # 50% del área de la mano más pequeña
 
 class FrameData(NamedTuple):
     """Extracted data from a valid frame"""
@@ -135,7 +135,7 @@ class FrameValidator:
         area2 = (bbox2[2] - bbox2[0]) * (bbox2[3] - bbox2[1])
         min_area = min(area1, area2)
 
-        # Si el área de intersección es mayor al 30% del área de una mano, están superpuestas
+        # Si el área de intersección es mayor al 50% del área de una mano, están superpuestas
         if min_area > 0 and inter_area / min_area > MAX_HANDS_OVERLAP_RATIO:
             return True
         return False
