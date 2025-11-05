@@ -6,12 +6,12 @@ from app.core.config import settings
 from app.application.use_cases.process_and_store_error import ProcessAndStoreErrorUseCase
 from app.domain.services.metadata_practice_service import MetadataPracticeService 
 from app.domain.services.postural_error_service import PosturalErrorService
-from app.infrastructure.kafka.kafka_message import KafkaMessage
-from app.infrastructure.kafka.kafka_producer import KafkaProducer
 from app.infrastructure.repositories.local_video_repo import LocalVideoRepository
 from app.infrastructure.repositories.mongo_metadata_repo import MongoMetadataRepo
 from app.application.dto.practice_data_dto import PracticeDataDTO
 from app.infrastructure.repositories.mysql_postural_error_repo import MySQLPosturalErrorRepository
+from app.messages.kafka_message import KafkaMessage
+from app.messages.kafka_producer import KafkaProducer
 
 logger = logging.getLogger(__name__)
 

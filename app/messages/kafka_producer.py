@@ -1,7 +1,8 @@
 import json
 import logging
 from aiokafka import AIOKafkaProducer
-from app.infrastructure.kafka.kafka_message import KafkaMessage
+
+from app.messages.kafka_message import KafkaMessage
 
 logger = logging.getLogger(__name__)
 

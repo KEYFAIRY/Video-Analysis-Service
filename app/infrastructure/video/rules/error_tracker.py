@@ -20,7 +20,7 @@ class ErrorTracker:
         """Generate error description based on error type"""
         if "wrist_rules" in error_type:
             hand = "izquierda" if "izquierda" in error_type else "derecha"
-            return f"Flexión radial/cubital reducida (<155°) en la muñeca {hand} (movimiento lateral hacia el pulgar o el meñique)."
+            return f"Mano {hand} flexionada en exceso hacia un lado."
         elif "abduction_rules" in error_type:
             hand = "izquierda" if "izquierda" in error_type else "derecha"
             if "dedos_" in error_type:
@@ -29,6 +29,6 @@ class ErrorTracker:
                     finger1, finger2 = parts[-2], parts[-1]
                     finger1_name = self.finger_names.get(finger1, finger1)
                     finger2_name = self.finger_names.get(finger2, finger2)
-                    return f"Ángulo excesivo (>60°) entre dedos {finger1_name}-{finger2_name} en mano {hand}"
+                    return f"Dedos {finger1_name} y {finger2_name} de la mano {hand} separados en exceso"
             return f"Error de abducción en mano {hand}"
         return error_type
