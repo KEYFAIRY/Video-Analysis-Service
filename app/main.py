@@ -5,8 +5,9 @@ import asyncio
 from app.core.config import settings
 from app.core.logging import configure_logging
 from app.infrastructure.database import mongo_connection, mysql_connection
-from app.messages.kafka_consumer import start_kafka_consumer
-from app.messages.kafka_producer import KafkaProducer
+from app.infrastructure.kafka.kafka_consumer import start_kafka_consumer
+from app.infrastructure.kafka.kafka_producer import KafkaProducer
+from app.infrastructure.monitoring import metrics
 
 # Configure logging
 configure_logging()
@@ -49,6 +50,11 @@ async def initialize_databases(retry_delay: int = 5):
 async def lifespan():
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     logger.info(f"Environment: {settings.APP_ENV}")
+
+    # ---- Prometheus ----
+    logger.info("Starting Prometheus metrics server...")
+    metrics.start_metrics_server()
+    logger.info("Prometheus metrics server started")
 
     # ---------- DB Connections ----------
     await initialize_databases(retry_delay=5)

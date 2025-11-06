@@ -1,5 +1,7 @@
 services:
   video-analysis-service:
+    ports:
+      - "8016:8016"
     build:
       context: .
       dockerfile: Dockerfile

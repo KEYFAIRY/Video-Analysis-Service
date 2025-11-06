@@ -1,5 +1,7 @@
+import time
 from app.domain.entities.postural_error import PosturalError
 from app.infrastructure.video.models.deterministic import set_deterministic_environment
+from app.infrastructure.monitoring import metrics
 from .models.model_manager import ModelManager
 from .detection.validators import FrameValidator
 from .rules.error_rules import ErrorDetector
@@ -11,6 +13,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 def process_video(video_path: str, practice_id: int, bpm: int, figure: float) -> list[PosturalError]:
+    start_time = time.monotonic()
+
     set_deterministic_environment()
     yolo_model, hands_detector = ModelManager.get_models()
     validator = FrameValidator()
@@ -87,6 +91,9 @@ def process_video(video_path: str, practice_id: int, bpm: int, figure: float) ->
                     id_practice=practice_id
                 )
             )
+
+    duration = time.monotonic() - start_time
+    metrics.video_processing_duration.observe(duration)
 
     logger.info(f"Video {video_path}: processed {total_processed} frames, discarded {discarded_frames}, found {len(results)} errors")
     return results

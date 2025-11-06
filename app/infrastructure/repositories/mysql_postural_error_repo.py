@@ -5,6 +5,7 @@ from app.domain.repositories.i_postural_error_repo import IPosturalErrorRepo
 from app.infrastructure.database.models.postural_error_model import PosturalErrorModel
 from app.infrastructure.database.mysql_connection import mysql_connection
 from app.core.exceptions import DatabaseConnectionException
+from app.infrastructure.monitoring import metrics
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +14,7 @@ class MySQLPosturalErrorRepository(IPosturalErrorRepo):
 
     async def create(self, postural_error: PosturalError) -> PosturalError:
         session = None
-        try:
+        try: 
             session = mysql_connection.get_async_session()
             model = PosturalErrorModel(
                 min_sec_init=postural_error.min_sec_init,
@@ -27,9 +28,19 @@ class MySQLPosturalErrorRepository(IPosturalErrorRepo):
             await session.refresh(model)
 
             logger.info(f"Postural error created with id={model.id} for practice_id={postural_error.id_practice}")
+            metrics.db_operations.labels(
+                        operation='Insert', 
+                        database='MySQL',
+                        status = 'success'
+                    ).inc()
             return self._model_to_entity(model)
 
         except IntegrityError as e:
+            metrics.db_operations.labels(
+                        operation='Insert', 
+                        database='MySQL',
+                        status = 'error'
+                    ).inc()
             if session:
                 await session.rollback()
             logger.error(

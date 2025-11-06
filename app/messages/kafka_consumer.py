@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 from aiokafka import AIOKafkaConsumer
+from aiokafka.structs import TopicPartition
 from app.core.config import settings
 from app.application.use_cases.process_and_store_error import ProcessAndStoreErrorUseCase
 from app.domain.services.metadata_practice_service import MetadataPracticeService 
@@ -12,6 +13,7 @@ from app.application.dto.practice_data_dto import PracticeDataDTO
 from app.infrastructure.repositories.mysql_postural_error_repo import MySQLPosturalErrorRepository
 from app.messages.kafka_message import KafkaMessage
 from app.messages.kafka_producer import KafkaProducer
+from app.infrastructure.monitoring import metrics
 
 logger = logging.getLogger(__name__)
 
@@ -45,19 +47,34 @@ async def start_kafka_consumer(kafka_producer: KafkaProducer):
     try:
         logger.info("Kafka consumer started")
 
-        async def process_message(dto: PracticeDataDTO):
+        async def process_message(tp: TopicPartition, dto: PracticeDataDTO):
             async with semaphore:
                 try:
                     errors = await use_case.execute(dto)
+
+                    topic_label = getattr(tp, 'topic', settings.KAFKA_INPUT_TOPIC)
+                    metrics.kafka_messages_processed.labels(
+                        topic=topic_label, 
+                        status='success'
+                    ).inc()
                     logger.info(f"Processed KafkaMessage with {len(errors)} errors")
                     await consumer.commit()
                 except Exception as e:
+                    metrics.kafka_messages_processed.labels(
+                        topic=topic_label, 
+                        status='error'
+                    ).inc()
                     logger.error(f"Error processing message in background: {e}", exc_info=True)
 
         async for msg in consumer:
             try:
                 decoded = msg.value.decode()
                 logger.info(f"Received raw message: {decoded}")
+
+                topic_label = getattr(msg, 'topic', settings.KAFKA_INPUT_TOPIC)
+                metrics.kafka_messages_polled.labels(
+                    topic=topic_label
+                ).inc()
 
                 data = json.loads(decoded)
                 kafka_msg = KafkaMessage(**data)
@@ -77,11 +94,18 @@ async def start_kafka_consumer(kafka_producer: KafkaProducer):
                     octaves=kafka_msg.octaves,
                 )
 
+                tp = TopicPartition(msg.topic, msg.partition)
+
                 # Crear la tarea y guardarla en la lista
-                task = asyncio.create_task(process_message(dto))
+                task = asyncio.create_task(process_message(tp, dto))
                 tasks.append(task)
 
             except Exception as e:
+                topic_label = getattr(msg, 'topic', settings.KAFKA_INPUT_TOPIC)
+                metrics.kafka_messages_processed.labels(
+                    topic=topic_label, 
+                    status='error'
+                ).inc()
                 logger.error(f"Error processing message: {e}", exc_info=True)
 
     finally:
