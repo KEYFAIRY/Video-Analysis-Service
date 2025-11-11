@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     APP_ENV: str = Field(default="development")
     DEBUG: bool = False
     RELOAD: bool = False
+    VIDEO_SERVICE_PORT: int
 
     # Kafka
     KAFKA_BROKER: str
