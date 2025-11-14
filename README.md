@@ -120,7 +120,6 @@ pytest --version
 
 ### Execute test:
 
-For example, for executing test in mysql_user_repository.py:
 ```bash
-python -m pytest tests/auth_service.py -v --tb=short
+python -m pytest tests/[name.py] -v --tb=short
 ```
