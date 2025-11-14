@@ -27,10 +27,11 @@ Video analysis service for detecting non ergonomic hand postures
 │   │
 │   ├── 📁 application/                 # Application layer (use case orchestration)
 │   │   ├── 📁 use_cases/               # Use cases ()
-│   │   ├── 📁 dto/                     # Data Transfer Objects
+│   │   └── 📁 dto/                     # Data Transfer Objects
+│   │
+│   ├── 📁 messages/                    # Broker message connection
 │   │
 │   ├── 📁 infrastructure/              # Technical implementations
-│   │   ├── 📁 kafka/                   # Kafka consumer and producer
 │   │   ├── 📁 database/                # Database adapters
 │   │   │   └── 📁 models/              # Database models
 │   │   ├── 📁 video/                   # Video analysis related
@@ -40,18 +41,13 @@ Video analysis service for detecting non ergonomic hand postures
 │   │   │   ├── 📁 rules/               # Main error detection and tracking
 │   │   │   └── 📁 utils/               # Utils
 │   │   └── 📁 repositories/            # Concrete repository implementations
+│   │
 │   └── 📁 shared/                      # Shared utilities
 │       ├── constants.py                # Global constants
 │       ├── enums.py                    # Enumerations
 │       └── utils.py                    # Helper functions
 │
 ├── 📁 tests/                           # Unit tests
-│   ├── 📁 domain/
-│   ├── 📁 application/
-│   └── 📁 infrastructure/
-│
-├── 📁 scripts/                         # Helper scripts
-│   └── start.sh                        # Script to start the service
 │
 ├── .env                                # Environment variables (not committed to Git)
 ├── Dockerfile                          # Instructions to build Docker image
@@ -88,4 +84,43 @@ Developing unit tests
 
 ```bash
 docker compose down
+```
+
+## Steps to run unit tests
+
+### Create virtual environment (with Python 3.10):
+
+```bash
+python -m venv venv
+```
+
+### Activate virtual environment:
+
+```bash
+.\venv\Scripts\Activate.ps1
+```
+
+### Install pip:
+
+```bash
+python -m pip install --upgrade pip
+```
+
+### Install required test tools and project requirements:
+
+```bash
+pip install pytest pytest-asyncio pytest-cov
+```
+
+### Check installation:
+
+```bash
+pytest --version
+```
+
+### Execute test:
+
+For example, for executing test in mysql_user_repository.py:
+```bash
+python -m pytest tests/auth_service.py -v --tb=short
 ```

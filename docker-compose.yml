@@ -47,7 +47,6 @@ services:
         broker:
             condition: service_healthy
             restart: true
-
 networks:
   app-network:
     external: true
