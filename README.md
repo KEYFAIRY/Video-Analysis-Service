@@ -88,7 +88,7 @@ docker compose down
 
 ## Steps to run unit tests
 
-### Create virtual environment (with Python 3.10):
+### Create virtual environment:
 
 ```bash
 python -m venv venv
