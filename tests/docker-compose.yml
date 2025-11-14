@@ -1,9 +1,0 @@
-services:
-  video-analysis-tests:
-    build:
-      context: ..      # subir al root del proyecto
-      dockerfile: tests/Dockerfile
-    container_name: video-analysis-tests
-    command: pytest -v --tb=short
-    volumes:
-      - ..:/app        # monta el proyecto root dentro del contenedor
